@@ -1,6 +1,9 @@
 package com.video.modules.video.controller;
 
 import com.video.config.JsonResponseBodyTemplate;
+import com.video.modules.jwt.JwtUtils;
+import com.video.modules.user.model.Users;
+import com.video.modules.user.service.UserService;
 import com.video.modules.video.model.LocationPath;
 import com.video.modules.video.model.Video;
 import com.video.modules.video.service.LocationPathService;
@@ -10,6 +13,8 @@ import net.kaczmarzyk.spring.data.jpa.domain.Equal;
 import net.kaczmarzyk.spring.data.jpa.domain.Like;
 import net.kaczmarzyk.spring.data.jpa.web.annotation.And;
 import net.kaczmarzyk.spring.data.jpa.web.annotation.Spec;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,10 +29,15 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping(produces = "application/json")
@@ -46,14 +56,18 @@ public class VideoController {
     //private final String pathVideosString = "/usr/local/tomcat9/webapps/rm/upload/videos";
     private VideoService videoService;
     private LocationPathService locationPathService;
+    private UserService userService;
     private Environment env;
     private Path rootImages;
+    private final JwtUtils jwtUtils;
 
     @Autowired
-    public VideoController(VideoService videoService, LocationPathService locationPathService, Environment env) {
+    public VideoController(VideoService videoService, LocationPathService locationPathService, UserService userService, Environment env, JwtUtils jwtUtils) {
         this.videoService = videoService;
         this.locationPathService = locationPathService;
+        this.userService = userService;
         this.env = env;
+        this.jwtUtils = jwtUtils;
     }
 
     @GetMapping(value = {"/videoOld", "/videoOld/"})
@@ -95,14 +109,81 @@ public class VideoController {
                 .serveResource();
     }
 
+    @GetMapping(value = "/csv/{video_id}")
+    @ResponseBody
+    public ResponseEntity<FileSystemResource> csv(@PathVariable("video_id") String video_id) {
+        String rootCSVProperty = env.getProperty("road.marking.rootCSVProperty");
+        String filePathString = rootCSVProperty + "/" + video_id + ".csv";
+        final HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.add("Content-Type", "text/csv");
+        responseHeaders.add("Content-Disposition", "attachment; filename=\"" + video_id + ".csv" + "\"");
+        return new ResponseEntity<>(new FileSystemResource(filePathString), responseHeaders, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/csv_create")
+    @ResponseBody
+    public ResponseEntity<Object> csvCreate(HttpServletResponse response) {
+
+
+        try {
+            List<Video> VideoList = this.videoService.findAllVideo("id", 0, 1000);
+            for (Video v : VideoList) {
+                String fileName = "";
+                if (v.getVideoUrl() != null) {
+                    String[] paths = v.getVideoUrl().split("/");
+                    if (paths.length > 1) {
+                        fileName = paths[paths.length - 1];
+                    }
+                }
+                if (fileName.length() > 0) {
+                    List<LocationPath> locationPathList = v.getLocationPath();
+                    String rootCSVProperty = env.getProperty("road.marking.rootCSVProperty");
+                    FileWriter fileWriter = new FileWriter(rootCSVProperty + System.getProperty("file.separator") + fileName + ".csv");
+                    CSVPrinter csvPrinter = new CSVPrinter(fileWriter, CSVFormat.DEFAULT);
+                    csvPrinter.printRecord("lat",
+                            "lang",
+                            "time",
+                            "title",
+                            "address",
+                            "description");
+                    String urlCSV = env.getProperty("road.marking.urlCSVProperty");
+                    v.setCsvUrl(urlCSV + "/" + fileName);
+                    v.setVideoFileName(fileName);
+                    videoService.saveVideo(v);
+                    for (LocationPath l : locationPathList) {
+                        csvPrinter.printRecord(l.getLat(),
+                                l.getLng(),
+                                l.getTime(),
+                                l.getTitle(),
+                                l.getAddress(),
+                                l.getDescription());
+                    }
+                    fileWriter.flush();
+                    fileWriter.close();
+                    csvPrinter.close();
+                }
+            }
+
+            return ResponseEntity.ok()
+                    .body(JsonResponseBodyTemplate
+                            .createResponseJson("success", response.getStatus(), "create CSVs successfully").toString());
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    JsonResponseBodyTemplate.
+                            createResponseJson("fail", HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()).toString(),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+
+        }
+    }
+
 
     @DeleteMapping(value = {"/video", "/video/"})
-    public ResponseEntity<Object> deleteUsers(@RequestParam(required = true) Long id, HttpServletResponse response) {
+    public ResponseEntity<Object> deleteVideo(@RequestParam(required = true) Long id, HttpServletResponse response) {
         try {
             videoService.deleteVideo(id);
             return ResponseEntity.ok()
                     .body(JsonResponseBodyTemplate
-                            .createResponseJson("success", response.getStatus(), "کاربر با موفقیت حذف شد").toString());
+                            .createResponseJson("success", response.getStatus(), "Video deleted successfully").toString());
         } catch (Exception e) {
             return new ResponseEntity<>(
                     JsonResponseBodyTemplate.
@@ -113,7 +194,7 @@ public class VideoController {
     }
 
     @PostMapping(value = {"/video", "/video/"})
-    public ResponseEntity<Object> addVideo(String json, MultipartFile fileImage, MultipartFile fileVideo, HttpServletResponse response) {
+    public ResponseEntity<Object> addVideo(String json, MultipartFile fileImage, MultipartFile fileVideo, HttpServletResponse response, HttpServletRequest request) {
         try {
 
             String rootVideosProperty = env.getProperty("road.marking.rootVideosProperty");
@@ -121,6 +202,7 @@ public class VideoController {
             String urlVideos = env.getProperty("road.marking.urlVideosProperty");
             String urlImages = env.getProperty("road.marking.urlImagesProperty");
 
+            String urlCSV = env.getProperty("road.marking.urlCSVProperty");
 
             Path rootVideos = Paths.get(rootVideosProperty);
             Path rootImages = Paths.get(rootImagesProperty);
@@ -130,22 +212,64 @@ public class VideoController {
 
             JSONObject video_JsonObject = new JSONObject(json);
             Video video = new Video();
-            if(video_JsonObject.has("city"))
-            video.setCity((video_JsonObject.getString("city")) == null ? "" : video_JsonObject.getString("city"));
+            if (video_JsonObject.has("city"))
+                video.setCity((video_JsonObject.getString("city")) == null ? "" : video_JsonObject.getString("city"));
 
-            if(video_JsonObject.has("device_id"))
-            video.setDeviceId((video_JsonObject.getString("device_id")) == null ? "" : video_JsonObject.getString("device_id"));
+
+            if (video_JsonObject.has("created_at"))
+                video.setCreatedAt((video_JsonObject.getString("created_at")) == null ? "" : video_JsonObject.getString("created_at"));
+
+            Long user_id = jwtUtils.getUserId(request);
+            if (user_id != null) {
+                Optional<Users> user = this.userService.findUser(user_id);
+                if (user.isPresent()) {
+                    video.setUsers(user.get());
+                }
+            }
+
+
+            if (video_JsonObject.has("device_id"))
+                video.setDeviceId((video_JsonObject.getString("device_id")) == null ? "" : video_JsonObject.getString("device_id"));
             if (fileImage != null)
                 video.setFileImage(fileImage);
             if (fileVideo != null)
                 video.setFileVideo(fileVideo);
 
-            Video video_saved = videoService.addVideo(video, rootVideos, rootImages, urlVideos, urlImages);
+
+            Video video_saved = videoService.addVideo(video, rootVideos, rootImages, urlVideos, urlImages, urlCSV);
             JSONArray locationPathArray = new JSONArray(video_JsonObject.getJSONArray("location_path"));
             List<LocationPath> locationPathList = new ArrayList<LocationPath>();
+            String rootCSVProperty = env.getProperty("road.marking.rootCSVProperty");
+            FileWriter fileWriter = new FileWriter(rootCSVProperty + System.getProperty("file.separator") + video_saved.getVideoFileName() + ".csv");
+            CSVPrinter csvPrinter = new CSVPrinter(fileWriter, CSVFormat.DEFAULT);
+//                for (Employee employee : employees) {
+//                    csvPrinter.printRecord(employee.getId(), employee.getFirstName(), employee.getLastName(), employee.getEmail(), employee.getDepartment());
+//                }
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+            String createdAtServer = video.getCreatedAtServer().format(formatter);
+
+            String createdAt= video.getCreatedAt() ;
+
+            csvPrinter.printRecord("lat",
+                    "lang",
+                    "time",
+                    "createdAt",
+                    "createdAtServer",
+                    "title",
+                    "address",
+                    "description");
             for (Object o : locationPathArray) {
                 if (o instanceof JSONObject) {
                     LocationPath locationPath = new LocationPath();
+                    csvPrinter.printRecord((((JSONObject) o).getString("lat")) == null ? "" : ((JSONObject) o).getString("lat"),
+                            (((JSONObject) o).getString("lng") == null ? "" : ((JSONObject) o).getString("lng")),
+                            (((JSONObject) o).getString("time") == null ? "" : ((JSONObject) o).getString("time")),
+                            (createdAt == null ? "" : createdAt),
+                            (createdAtServer == null ? "" : createdAtServer),
+                            (((JSONObject) o).getString("title") == null ? "" : ((JSONObject) o).getString("title")),
+                            (((JSONObject) o).getString("address") == null ? "" : ((JSONObject) o).getString("address")),
+                            (((JSONObject) o).getString("description") == null ? "" : ((JSONObject) o).getString("description")));
                     locationPath.setLat((((JSONObject) o).getString("lat")) == null ? "" : ((JSONObject) o).getString("lat"));
                     locationPath.setLng((((JSONObject) o).getString("lng") == null ? "" : ((JSONObject) o).getString("lng")));
                     locationPath.setTime((((JSONObject) o).getString("time") == null ? "" : ((JSONObject) o).getString("time")));
@@ -156,6 +280,11 @@ public class VideoController {
                     locationPathService.addLocationPath(locationPath);
                 }
             }
+
+            fileWriter.flush();
+            fileWriter.close();
+            csvPrinter.close();
+
 
             return ResponseEntity.ok()
                     .body(video_saved);
@@ -190,9 +319,39 @@ public class VideoController {
             @RequestParam(required = false, defaultValue = "10") int perPage,
             HttpServletResponse response) {
         try {
+            System.out.println("==================== videoService.findAll");
             List<Video> VideoList = this.videoService.findAll(sort, page, perPage, videoSpec);
             return ResponseEntity.ok()
                     .body(VideoList);
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    JsonResponseBodyTemplate.
+                            createResponseJson("fail", HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()).toString(),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
+    @PutMapping(value = {"/video/check", "/video/check/"})
+    public ResponseEntity<Object> checkVideo(
+            @RequestParam Long video_id,
+            @RequestParam boolean is_check,
+            HttpServletResponse response) {
+        try {
+            Video video = videoService.findVideo(video_id).orElse(null);
+            if (video != null) {
+
+                 video.setChecked(is_check);
+                 videoService.saveVideo(video);
+                return ResponseEntity.ok()
+                        .body(video);
+            }else{
+                return new ResponseEntity<>(
+                        JsonResponseBodyTemplate.
+                                createResponseJson("fail", HttpStatus.INTERNAL_SERVER_ERROR.value(), "video not found").toString(),
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
         } catch (Exception e) {
             return new ResponseEntity<>(
                     JsonResponseBodyTemplate.

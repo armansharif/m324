@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 
+import com.video.modules.video.model.Video;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
@@ -31,15 +32,22 @@ public class Users implements Serializable, UserDetails {
 
     @Column(unique = true)
     private String mobile;
+
+
+
     @JsonIgnore
     private String password;
     private boolean enabled = true;
 
-    @Column(unique = true)
     private String code;
 
     private String refCode;
 
+    @Column(unique = true)
+    private String username;
+
+    @JsonIgnore
+    private String adminPassword;
 
 
 
@@ -56,6 +64,10 @@ public class Users implements Serializable, UserDetails {
     @JsonManagedReference
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     private List<Addresses> addresses;
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
+    private List<Video> videos;
 
 
     private String img;
@@ -78,6 +90,12 @@ public class Users implements Serializable, UserDetails {
 
     public Users(String mobile, String password, Set<Roles> roles) {
         this.mobile = mobile;
+        this.password = password;
+        this.roles = roles;
+    }
+    public Users(String mobile,String email, String password, Set<Roles> roles) {
+        this.mobile = mobile;
+        this.email = email;
         this.password = password;
         this.roles = roles;
     }
@@ -116,6 +134,7 @@ public class Users implements Serializable, UserDetails {
     }
 
     /////////////////////////////////////////////////////
+    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> authorities = new ArrayList<>();
@@ -132,7 +151,7 @@ public class Users implements Serializable, UserDetails {
 
     @Override
     public String getUsername() {
-        return mobile;
+        return username;
     }
 
     @Override
@@ -189,15 +208,6 @@ public class Users implements Serializable, UserDetails {
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
-
-//    public List<Roles> getRoles() {
-//        return roles;
-//    }
-//
-//    public void setRoles(List<Roles> userRoles) {
-//        this.roles = userRoles;
-//    }
-
 
     public Set<Roles> getRoles() {
         return roles;
@@ -256,4 +266,24 @@ public class Users implements Serializable, UserDetails {
         this.addresses = addresses;
     }
 
+
+    public String getAdminPassword() {
+        return adminPassword;
+    }
+
+    public void setAdminPassword(String adminPassword) {
+        this.adminPassword = adminPassword;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public List<Video> getVideos() {
+        return videos;
+    }
+
+    public void setVideos(List<Video> videos) {
+        this.videos = videos;
+    }
 }

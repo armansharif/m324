@@ -2,10 +2,12 @@ package com.video.modules.jwt;
 
 import com.video.modules.user.model.Users;
 import com.video.modules.user.service.UserService;
+import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -32,20 +34,27 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String jwt = request.getHeader(new JwtUtils().HEADER_STRING);
 // && SecurityContextHolder.getContext().getAuthentication() == null
-        if (jwt != null) {
+        try {
+            String pathInfo = request.getRequestURI();
 
-            if (jwt.startsWith(new JwtUtils().TOKEN_PREFIX)) {
-                String username = jwtUtils.getUsername(jwt);
-                if (username != null) {
-                    Users users = (Users) userService.loadUserByUsername(username);
+            if (pathInfo.indexOf("auth") > 0 || pathInfo.indexOf("verify") > 0) {
+                //do nothing
+            } else if (StringUtils.hasText(jwt) && jwtUtils.validateToken(jwt)) {
+                if (jwt.startsWith(new JwtUtils().TOKEN_PREFIX)) {
+                    String username = jwtUtils.getUsername(jwt);
+                    if (username != null) {
+                        Users users = (Users) userService.loadUserByUsername(username);
 
-                    UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
-                            new UsernamePasswordAuthenticationToken(users, null, users.getAuthorities());
-                    SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
-
+                        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
+                                new UsernamePasswordAuthenticationToken(users, null, users.getAuthorities());
+                        SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+                    }
                 }
             }
+        } catch (Exception ex) {
+            request.setAttribute("exception", ex);
         }
+
         filterChain.doFilter(request, response);
 
 

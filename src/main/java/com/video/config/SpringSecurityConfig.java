@@ -36,8 +36,12 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.csrf().disable()
-                .authorizeRequests().antMatchers("/", "/video", "/auth","/imark/**","/play_video/**","/play_video2/**","/videoList/**","/najm/**","/najm_uploads/**","/upload/**").permitAll()
+        http
+                .csrf().disable()
+              //  .cors().disable()
+                .authorizeRequests()
+                .antMatchers("/", "/verify/mobile", "/verify/email","/auth/mobile", "/auth/email","/login","/resetPass/email","/resetPass/mobile","/admin/login","/forgetPass/email","/forgetPass/mobile").permitAll()
+                .antMatchers(  "/csv/**","/video/**","/imark/**","/csv_create/**","/play_video/**","/play_video2/**","/videoList/**","/najm/**","/najm_uploads/**","/upload/**","/test/**").permitAll()
                 .anyRequest().authenticated()
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and().addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
@@ -49,7 +53,7 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
                     response.getWriter().write(new JSONObject()
                             .put("status", "fail")
                             .put("code", HttpServletResponse.SC_FORBIDDEN)
-                            .put("message", "توکن شما منقضی شده است.")
+                            .put("message", "Your token has expired.")
                             .toString());
                 })
                 .accessDeniedHandler((request, response, e) ->
@@ -59,7 +63,7 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
                     response.getWriter().write(new JSONObject()
                             .put("status", "fail")
                             .put("code", HttpServletResponse.SC_FORBIDDEN)
-                            .put("message", "شما دسترسی به این بخش را ندارید")
+                            .put("message", "You do not have access to this section")
                             .toString());
                 });
 
