@@ -41,7 +41,7 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
               //  .cors().disable()
                 .authorizeRequests()
                 .antMatchers("/", "/verify/mobile", "/verify/email","/auth/mobile", "/auth/email","/login","/resetPass/email","/resetPass/mobile","/admin/login","/forgetPass/email","/forgetPass/mobile").permitAll()
-                .antMatchers(  "/csv/**","/video/**","/imark/**","/csv_create/**","/play_video/**","/play_video2/**","/videoList/**","/najm/**","/najm_uploads/**","/upload/**","/test/**").permitAll()
+                .antMatchers(   "/dam/**","/upload/**","/test/**").permitAll()
                 .anyRequest().authenticated()
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and().addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

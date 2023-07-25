@@ -4,5 +4,34 @@ public class Routes {
 
     public final static String GET_users_admin = "/admin/users";
     public final static String GET_users_by_id = "/users/{id}";
-    public final static String GET_profile ="/profile";
+    public final static String PUT_profile = "/profile";
+
+    public final static String GET_profile = "/profile";
+
+    public final static String POST_user_auth_mobile = "/auth/mobile";
+
+    public final static String POST_user_auth_email = "/auth/email";
+
+    public final static String POST_forget_pass_email = "/forgetPass/email";
+    public final static String POST_forget_pass_mobile = "/forgetPass/mobile";
+
+    public final static String POST_user_verify_email = "/verify/email";
+
+    public final static String POST_user_verify_mobile = "/verify/mobile";
+
+
+    public final static String POST_reset_pass_email = "/resetPass/mobile";
+
+    public final static String POST_reset_pass_mobile = "/resetPass/email";
+
+    public final static String POST_login = "/login";
+    public final static String POST_admin_login = "/admin/login";
+    public final static String POST_admin_users = "/admin/users";
+
+    public final static String Get_owner_dams = "/dam/{ownerId}";
+    public final static String Get_dam = "/dam/{id}";
+    public final static String POST_dam_add = "/dam/add";
+    public final static String DELETE_dam_delete = "/dam/delete/{id}";
+    public final static String PUT_dam_edit = "/dam/edit/{id}";
+
 }

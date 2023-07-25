@@ -23,20 +23,20 @@ public class AppLogAspect {
     public AppLogAspect(HttpServletRequest request) {
         this.request = request;
     }
-    @Before(value = "execution(* com.dam.modules.video.service.VideoService.*(..))")
+    @Before(value = "execution(* com.dam.modules.dam.service.DamService.*(..))")
     public void beforeAdvice(JoinPoint joinPoint) {
         System.out.println("Before method:" + joinPoint.getSignature());
 
         System.out.println("Creating Employee with name - " );
     }
 
-    @After(value = "execution(* com.dam.modules.video.service.VideoService.*(..))")
+    @After(value = "execution(* com.dam.modules.dam.service.DamService.*(..))")
     public void afterAdvice(JoinPoint joinPoint) {
         System.out.println("After method:" + joinPoint.getSignature());
 
         System.out.println("Successfully created Employee with name - " );
     }
-    @Before(value = "execution(* com.dam.modules.video.service.VideoService.*(..))")
+    @Before(value = "execution(* com.dam.modules.dam.service.DamService.*(..))")
     public void beforeAdvice2(JoinPoint joinPoint) {
         String methodName = joinPoint.getSignature().getName();
         System.out.println("____________________________Before 2 method:" + joinPoint.getSignature());

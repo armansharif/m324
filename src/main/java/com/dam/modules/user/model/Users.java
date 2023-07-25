@@ -1,10 +1,10 @@
 package com.dam.modules.user.model;
 
+import com.dam.modules.dam.model.Dam;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 
-import com.dam.modules.video.model.Video;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
@@ -67,8 +67,9 @@ public class Users implements Serializable, UserDetails {
 
     @JsonManagedReference
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
-    private List<Video> videos;
+    private List<Dam> dams;
 
+    private int userType=1;//1 damdar
 
     private String img;
 
@@ -279,11 +280,20 @@ public class Users implements Serializable, UserDetails {
         this.username = username;
     }
 
-    public List<Video> getVideos() {
-        return videos;
+
+    public List<Dam> getDams() {
+        return dams;
     }
 
-    public void setVideos(List<Video> videos) {
-        this.videos = videos;
+    public void setDams(List<Dam> dams) {
+        this.dams = dams;
+    }
+
+    public int getUserType() {
+        return userType;
+    }
+
+    public void setUserType(int userType) {
+        this.userType = userType;
     }
 }

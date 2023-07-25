@@ -27,8 +27,8 @@ public class ReleaseService {
     }
 
     public ReleaseApps addRelease(ReleaseApps releaseApps) throws IOException {
-        String urlReleaseFile = env.getProperty("video.urlReleaseFile");
-        String rootReleaseFileStr = env.getProperty("video.rootReleaseFile");
+        String urlReleaseFile = env.getProperty("dam.urlReleaseFile");
+        String rootReleaseFileStr = env.getProperty("dam.rootReleaseFile");
         Path rootReleaseFile = Paths.get(rootReleaseFileStr);
         String path = rootReleaseFile.toFile().getAbsolutePath();
         if (releaseApps.getFile() != null) {

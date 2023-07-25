@@ -3,6 +3,7 @@ package com.dam.modules.user.service;
 import com.dam.modules.user.model.Addresses;
 import com.dam.modules.user.model.Users;
 import com.dam.modules.user.repository.AddressesRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

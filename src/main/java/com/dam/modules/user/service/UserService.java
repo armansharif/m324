@@ -10,21 +10,26 @@ import com.dam.modules.user.model.Roles;
 import com.dam.modules.user.model.Users;
 import com.dam.modules.user.repository.RolesRepository;
 import com.dam.modules.user.repository.UsersRepository;
+import net.bytebuddy.implementation.bytecode.Throw;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
@@ -35,6 +40,7 @@ import java.nio.file.Paths;
 import java.util.*;
 
 @Service
+
 public class UserService implements UserDetailsService {
 
     Logger logger = LoggerFactory.getLogger(UserService.class);
@@ -53,13 +59,18 @@ public class UserService implements UserDetailsService {
         this.env = env;
     }
 
-    //validation is here
+    @Value("${general.user.registrationOnFirstLogin.enable}")
+    private boolean registrationOnFirstLogin;
+
+
     public String generateCode(Users users) {
         return "code";
         //   return "code" + users.getMobile().substring((users.getMobile().length() - 4), users.getMobile().length());
     }
 
-    public String verificationUser(String mobile) {
+    public String verificationUser(String mobile ) {
+        env.getProperty("dam.urlUserImage");
+
         String response = "";
         try {
             String smsCode = smsVerification.generateCode() + "";
@@ -68,16 +79,25 @@ public class UserService implements UserDetailsService {
                 user.setPassword(smsCode);
                 this.usersRepository.save(user);
 
-            } else {
+            } else if (registrationOnFirstLogin) {
+
                 Set<Roles> roles = new HashSet<>();
                 roles.add(rolesRepository.findRolesByName("user"));
                 user = new Users(mobile, smsCode, roles);
                 user.setCode(generateCode(user));
                 //register new user
                 this.usersRepository.save(user);
+            } else {
+                JSONObject resJson = new JSONObject();
+                resJson.put("code", 200);
+                resJson.put("status", "fail");
+                resJson.put("message", "User not found");
+                return resJson.toString();
             }
-            //  response = smsVerification.sendSmsVerificationGhasedak(mobile, smsCode);
-            response = smsVerification.sendSmsVerificationGhasedak(mobile, smsCode);
+            if (user != null) {
+                //  response = smsVerification.sendSmsVerificationGhasedak(mobile, smsCode);
+                response = smsVerification.sendSmsVerificationSMSIR(mobile, smsCode);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -115,6 +135,7 @@ public class UserService implements UserDetailsService {
         }
         return resJson.toString();
     }
+
     public int verificationUserByEmail(String email) {
         SendMail sendMail = new SendMail();
         int response = -1;
@@ -134,8 +155,8 @@ public class UserService implements UserDetailsService {
                 //register new user
                 this.usersRepository.save(user);
             }
-           response = sendMail.sendMail(email, " Verification Code : ", " <p> <h3>    " + smsCode + "</h3></p>");
-          //  response =   sendMail.asycSendMailNewUser(email,  " asycSendMailNewUser Verification Code ", " <p> <h3>    " + smsCode + "</h3></p>");
+            response = sendMail.sendMail(email, " Verification Code : ", " <p> <h3>    " + smsCode + "</h3></p>");
+            //  response =   sendMail.asycSendMailNewUser(email,  " asycSendMailNewUser Verification Code ", " <p> <h3>    " + smsCode + "</h3></p>");
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -144,9 +165,9 @@ public class UserService implements UserDetailsService {
     }
 
     public Users registerUser(Users users) throws IOException {
-        String urlPostImageString = env.getProperty("video.urlUserImage");
+        String urlPostImageString = env.getProperty("dam.urlUserImage");
 
-        String rootUserImageString = env.getProperty("video.rootUserImage");
+        String rootUserImageString = env.getProperty("dam.rootUserImage");
         Path rootUsersImage = Paths.get(rootUserImageString);
         String path = rootUsersImage.toFile().getAbsolutePath();
 
@@ -168,8 +189,8 @@ public class UserService implements UserDetailsService {
                             String address,
                             MultipartFile file) throws IOException {
         Optional<Users> user = usersRepository.findById(id);
-        String urlPostImageString = env.getProperty("video.urlUserImage");
-        String rootUserImageString = env.getProperty("video.rootUserImage");
+        String urlPostImageString = env.getProperty("dam.urlUserImage");
+        String rootUserImageString = env.getProperty("dam.rootUserImage");
         Path rootUsersImage = Paths.get(rootUserImageString);
         if (user.isPresent()) {
             user.get().setName(name);
@@ -197,8 +218,8 @@ public class UserService implements UserDetailsService {
                             String address,
                             MultipartFile file) throws IOException {
         Optional<Users> user = usersRepository.findById(id);
-        String urlPostImageString = env.getProperty("video.urlUserImage");
-        String rootUserImageString = env.getProperty("video.rootUserImage");
+        String urlPostImageString = env.getProperty("dam.urlUserImage");
+        String rootUserImageString = env.getProperty("dam.rootUserImage");
         Path rootUsersImage = Paths.get(rootUserImageString);
         if (user.isPresent()) {
             if (name != null)
@@ -224,9 +245,9 @@ public class UserService implements UserDetailsService {
             }
         }
         Users user_saved = null;
-        try{
-            user_saved=   this.usersRepository.save(user.orElse(null));
-        }catch (Exception e){
+        try {
+            user_saved = this.usersRepository.save(user.orElse(null));
+        } catch (Exception e) {
             logger.info(e.getMessage());
         }
         return this.usersRepository.save(user.orElse(null));
@@ -257,9 +278,11 @@ public class UserService implements UserDetailsService {
     public Users findUserByMobile(String mobile) {
         return this.usersRepository.findByMobile(mobile);
     }
+
     public Users findUserByUserName(String username) {
         return this.usersRepository.findByUsername(username);
     }
+
     public Users findUserByEmail(String email) {
         return this.usersRepository.findByEmail(email);
     }
@@ -270,20 +293,22 @@ public class UserService implements UserDetailsService {
 
     }
 
-    public Users checkVerificationUser(String mobile, String code) {
+    public Optional<Users> checkVerificationUser(String mobile, String code) {
         return usersRepository.validateVerificationCode(mobile, code);
     }
 
     public boolean checkVerificationUserCMCOM(Users user, String code) throws IOException {
         return smsVerification.verificationCMCOM(user.getPassword(), code);
     }
-    public Users checkVerificationUser(String mobile,String email, String code) {
-        return usersRepository.validateVerificationCode(mobile,email, code);
+
+    public Users checkVerificationUser(String mobile, String email, String code) {
+        return usersRepository.validateVerificationCode(mobile, email, code);
     }
 
     public Users checkVerificationUserByEmail(String email, String code) {
         return usersRepository.validateVerificationCodeByEmail(email, code);
     }
+
     public Users checkVerificationAdmin(String mobile, String pass) {
         return usersRepository.findByMobileAndAdminPasswordAndAdminPasswordIsNotNull(mobile, pass);
     }

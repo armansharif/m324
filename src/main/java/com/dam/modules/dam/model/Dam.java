@@ -1,4 +1,4 @@
-package com.dam.modules.video.model;
+package com.dam.modules.dam.model;
 
 import com.fasterxml.jackson.annotation.*;
 
@@ -15,34 +15,29 @@ import java.util.List;
 
 
 @Entity
-public class Video implements Serializable {
+public class Dam implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String deviceId;
-    private String backgroundImageUrl;
-    private String videoUrl;
-    private String csvUrl;
-    //get from config
+    private String name;
+    private String photo;
+    private Long age;
+
+
     @Transient
     @JsonIgnore
-    private static String domain = "http://158.58.185.117:8080";
-
+    private static String typeId = "";
 
 
     @JsonIgnore
-    private static String videoFileName = "";
+    private static String typeString = "";
 
 
     @Transient
     @JsonIgnore
     private MultipartFile fileImage;
-
-    @Transient
-    @JsonIgnore
-    private MultipartFile fileVideo;
 
     @Column(name = "created_at")
     private String createdAt;
@@ -57,7 +52,6 @@ public class Video implements Serializable {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    private String city;
 
     private boolean isChecked = false;
 
@@ -67,8 +61,9 @@ public class Video implements Serializable {
 
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "video",cascade = CascadeType.ALL)
-    private List<LocationPath> locationPath;
+    @JsonIgnore
+    @OneToMany(mappedBy = "dam", cascade = CascadeType.ALL)
+    private List<DamStatus> damStatus;
 
     public Long getId() {
         return id;
@@ -78,28 +73,28 @@ public class Video implements Serializable {
         this.id = id;
     }
 
-    public String getDeviceId() {
-        return deviceId;
+    public String getName() {
+        return name;
     }
 
-    public void setDeviceId(String deviceId) {
-        this.deviceId = deviceId;
+    public void setName(String deviceId) {
+        this.name = deviceId;
     }
 
-    public String getBackgroundImageUrl() {
-        return backgroundImageUrl;
+    public String getPhoto() {
+        return photo;
     }
 
-    public void setBackgroundImageUrl(String background_image_url) {
-        this.backgroundImageUrl = background_image_url;
+    public void setPhoto(String background_image_url) {
+        this.photo = background_image_url;
     }
 
-    public static String getDomain() {
-        return domain;
+    public static String getTypeId() {
+        return typeId;
     }
 
-    public static void setDomain(String domain) {
-        Video.domain = domain;
+    public static void setTypeId(String typeId) {
+        Dam.typeId = typeId;
     }
 
     public String getCreatedAt() {
@@ -110,7 +105,7 @@ public class Video implements Serializable {
         this.createdAt = createdAt;
     }
 
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     public LocalDateTime getCreatedAtServer() {
         return createdAtServer;
     }
@@ -127,21 +122,6 @@ public class Video implements Serializable {
         this.updatedAt = updatedAt;
     }
 
-    public List<LocationPath> getLocationPath() {
-        return locationPath;
-    }
-
-    public void setLocationPath(List<LocationPath> locationPath) {
-        this.locationPath = locationPath;
-    }
-
-    public String getVideoUrl() {
-        return videoUrl;
-    }
-
-    public void setVideoUrl(String video_url) {
-        this.videoUrl = video_url;
-    }
 
     public MultipartFile getFileImage() {
         return fileImage;
@@ -151,20 +131,12 @@ public class Video implements Serializable {
         this.fileImage = fileImage;
     }
 
-    public MultipartFile getFileVideo() {
-        return fileVideo;
+    public Long getAge() {
+        return age;
     }
 
-    public void setFileVideo(MultipartFile fileVideo) {
-        this.fileVideo = fileVideo;
-    }
-
-    public String getCity() {
-        return city;
-    }
-
-    public void setCity(String city) {
-        this.city = city;
+    public void setAge(Long age) {
+        this.age = age;
     }
 
     public Users getUsers() {
@@ -181,20 +153,12 @@ public class Video implements Serializable {
         return users == null ? null : users.getId();
     }
 
-    public static String getVideoFileName() {
-        return videoFileName;
+    public static String getTypeString() {
+        return typeString;
     }
 
-    public static void setVideoFileName(String videoFileName) {
-        Video.videoFileName = videoFileName;
-    }
-
-    public String getCsvUrl() {
-        return csvUrl;
-    }
-
-    public void setCsvUrl(String csvUrl) {
-        this.csvUrl = csvUrl;
+    public static void setTypeString(String typeString) {
+        Dam.typeString = typeString;
     }
 
     public boolean isChecked() {
@@ -204,4 +168,14 @@ public class Video implements Serializable {
     public void setChecked(boolean checked) {
         isChecked = checked;
     }
+
+    public List<DamStatus> getDamStatus() {
+        return damStatus;
+    }
+
+    public void setDamStatus(List<DamStatus> damStatus) {
+        this.damStatus = damStatus;
+    }
+
+
 }

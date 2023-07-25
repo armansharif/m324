@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface UsersRepository extends JpaRepository<Users, Long> {
 
@@ -24,7 +26,7 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
 
 
     @Query(nativeQuery = true, value = "select * from users where mobile =:mobile and password=:code and  NOW()  <= DATE_ADD(updated_at, INTERVAL 5 MINUTE) ")
-    Users validateVerificationCode(@Param("mobile") String mobile, @Param("code") String code);
+    Optional<Users> validateVerificationCode(@Param("mobile") String mobile, @Param("code") String code);
 
     @Query(nativeQuery = true, value = "select * from users where (mobile =:mobile OR  email =:email ) and password=:code and  NOW()  <= DATE_ADD(updated_at, INTERVAL 5 MINUTE) ")
     Users validateVerificationCode(@Param("mobile") String mobile,@Param("email") String email, @Param("code") String code);

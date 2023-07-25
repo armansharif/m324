@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -80,7 +81,7 @@ public class UserController {
         }
     }
 
-    @GetMapping(value = {"/profile"})
+    @GetMapping(value = {Routes.GET_profile})
     // @PreAuthorize("hasAuthority('OP_ACCESS_USER')")
     public ResponseEntity<Object> getUserByToken(HttpServletRequest request) {
         Long user_id = jwtUtils.getUserId(request);
@@ -93,7 +94,7 @@ public class UserController {
         }
     }
 
-    @PostMapping(value = {"/forgetPass/mobile", "/forgetPass/mobile/"}, produces = "application/json")
+    @PostMapping(value = {Routes.POST_forget_pass_mobile}, produces = "application/json")
     public String forgetPassUser(@RequestParam String mobile, HttpServletResponse response) {
         logger.info("try to reset pass.");
         mobile = jwtUtils.arabicToDecimal(mobile);
@@ -109,7 +110,7 @@ public class UserController {
         }
     }
 
-    @PostMapping(value = {"/forgetPass/email", "/forgetPass/email/"}, produces = "application/json")
+    @PostMapping(value = {Routes.POST_forget_pass_email}, produces = "application/json")
     public ResponseEntity<?> forgetPassUserByEmail(@RequestParam String email, HttpServletResponse response) {
         //validation email
         logger.info("try to verification by Email.");
@@ -141,15 +142,15 @@ public class UserController {
 
     }
 
-    @PostMapping(value = {"/verify/mobile", "/verify/mobile/"}, produces = "application/json")
+    @PostMapping(value = {Routes.POST_user_verify_mobile}, produces = "application/json")
     public String preVerificationUser(@RequestParam String mobile, HttpServletResponse response) {
         mobile = jwtUtils.arabicToDecimal(mobile);
         // mobile= jwtUtils.urlDecode(mobile);
         logger.info("try to verification.");
-        return userService.verificationUserCM(mobile);
+        return userService.verificationUser(mobile);
     }
 
-    @PostMapping(value = {"/verify/email", "/verify/email/"}, produces = "application/json")
+    @PostMapping(value = {Routes.POST_user_verify_email}, produces = "application/json")
     public ResponseEntity<?> preVerificationUserByEmail(@RequestParam String email, HttpServletResponse response) {
         //validation email
         logger.info("try to verification by Email.");
@@ -172,7 +173,7 @@ public class UserController {
 
     }
 
-    @PostMapping(value = {"/auth/mobile", "/auth/mobile/"}, produces = "application/json")
+    @PostMapping(value = {Routes.POST_user_auth_mobile}, produces = "application/json")
     public ResponseEntity<?> verificationUser(
             @RequestParam String mobile,
             @RequestParam String code,
@@ -197,12 +198,7 @@ public class UserController {
             unSuccessfulLogin.put("message", "The verification code has expired or was entered incorrectly.");
             return ResponseEntity.badRequest().body(unSuccessfulLogin.toString());
         }
-        boolean isverify = false;
-        try {
-            isverify = userService.checkVerificationUserCMCOM(user, code);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
 
         if (email != null) {
             if (userService.findUserByEmail(email) != null) {
@@ -216,7 +212,7 @@ public class UserController {
             }
         }
 
-        if(username != null){
+        if (username != null) {
             Users userCheck = userService.findUserByUserName(username);
             if (userCheck != null) {
                 logger.info(" username exist");
@@ -228,9 +224,10 @@ public class UserController {
                 return ResponseEntity.badRequest().body(unSuccessfulLogin.toString());
             }
         }
+        boolean isverify = false;
         JSONObject successfulLogin = new JSONObject();
         JSONObject unSuccessfulLogin = new JSONObject();
-        if (!isverify) {
+        if (!userService.checkVerificationUser(mobile, code).isPresent()) {
             logger.info(" verification failed");
 
             unSuccessfulLogin.put("code", response.getStatus());
@@ -268,7 +265,7 @@ public class UserController {
     }
 
 
-    @PostMapping(value = {"/auth/email", "/auth/email/"}, produces = "application/json")
+    @PostMapping(value = {Routes.POST_user_auth_email}, produces = "application/json")
     public ResponseEntity<?> verificationUserByEmail(
             @RequestParam String email,
             @RequestParam String code,
@@ -293,7 +290,7 @@ public class UserController {
             return ResponseEntity.badRequest().body(unSuccessfulLogin.toString());
         }
 
-        if(mobile != null){
+        if (mobile != null) {
             Users userCheck = userService.findUserByMobile(mobile);
             if (userCheck != null) {
                 logger.info(" mobile exist");
@@ -306,7 +303,7 @@ public class UserController {
             }
         }
 
-        if(username != null){
+        if (username != null) {
             Users userCheck = userService.findUserByMobile(username);
             if (userCheck != null) {
                 logger.info(" username exist");
@@ -347,7 +344,7 @@ public class UserController {
     }
 
 
-    @PostMapping(value = {"/resetPass/mobile", "/resetPass/mobile/"}, produces = "application/json")
+    @PostMapping(value = {Routes.POST_reset_pass_mobile}, produces = "application/json")
     public ResponseEntity<?> resetPasswordByMobile(
             @RequestParam String mobile,
             @RequestParam String code,
@@ -409,7 +406,7 @@ public class UserController {
     }
 
 
-    @PostMapping(value = {"/resetPass/email", "/resetPass/email/"}, produces = "application/json")
+    @PostMapping(value = {Routes.POST_reset_pass_email}, produces = "application/json")
     public ResponseEntity<?> resetPasswordByEmail(
             @RequestParam String email,
             @RequestParam String code,
@@ -453,7 +450,7 @@ public class UserController {
                 .body(successfulLogin.toString());
     }
 
-    @PostMapping(value = {"/login", "/login/"}, produces = "application/json")
+    @PostMapping(value = {Routes.POST_login}, produces = "application/json")
     public ResponseEntity<?> login(@RequestParam String username, @RequestParam String pass, HttpServletResponse response) {
 
         pass = jwtUtils.urlDecode(pass);
@@ -481,7 +478,7 @@ public class UserController {
     }
 
 
-    @PostMapping(value = {"/admin/login", "/admin/login/"}, produces = "application/json")
+    @PostMapping(value = {Routes.POST_admin_login}, produces = "application/json")
     public ResponseEntity<?> adminLogin(@RequestParam String username, @RequestParam String pass, HttpServletResponse response) {
 
         pass = jwtUtils.urlDecode(pass);
@@ -518,14 +515,8 @@ public class UserController {
 
     }
 
-//    @PostMapping(value = {"/users", "/users/"}, produces = "application/json")
-//    @PreAuthorize("hasAuthority('OP_ADD_USER')")
-//    public Users addUser(@RequestBody Users users) {
-//        return userService.registerUser(users);
-//    }
 
-
-    @PostMapping(value = {"/admin/users", "/admin/users/"})
+    @PostMapping(value = {Routes.POST_admin_users})
     @PreAuthorize("hasAuthority('OP_ADD_USER')")
     public ResponseEntity<Object> addUser(@ModelAttribute Users users) {
         try {
@@ -549,7 +540,7 @@ public class UserController {
     }
 
 
-    @PutMapping(value = {Routes.GET_profile})
+    @PutMapping(value = {Routes.PUT_profile})
     // @PreAuthorize("hasAuthority('OP_ACCESS_PUBLIC')")
     public ResponseEntity<Object> updateUser(
             @RequestParam String name,
