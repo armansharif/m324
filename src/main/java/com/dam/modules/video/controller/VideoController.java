@@ -295,16 +295,6 @@ public class VideoController {
     }
 
 
-//    @GetMapping(value = {"/video2", "/video2/"})
-//    public Page<Video> findVideos(
-//            @And({
-//                    @Spec(path = "deviceId", spec = Equal.class)
-//            }) Specification<Video> videoSpec,
-//            Pageable pageable) {
-//
-//        return videoService.findAll(videoSpec, pageable);
-//    }
-
     @GetMapping(value = {"/video", "/video/"})
     public ResponseEntity<Object> findVideo(
             @And({

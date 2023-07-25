@@ -31,11 +31,11 @@ public class LocationPath implements Serializable {
     private String address;
 
     @JsonIgnore
-    @Column(name = "created_at",updatable = false)
+    @Column(updatable = false)  //name = "created_at",
     @CreationTimestamp
     private LocalDateTime createdAt;
     @JsonIgnore
-    @Column(name = "updated_at")
+    // @Column(name = "updated_at")
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 

@@ -50,7 +50,7 @@ public class UserController {
         this.addressesService = addressesService;
     }
 
-    @GetMapping(value = {"/admin/users", "/admin/users/"})
+    @GetMapping(value = {Routes.GET_users_admin})
     @PreAuthorize("hasAuthority('OP_ACCESS_USER')")
     public List<Users> getAllUsers(
             @And({
@@ -68,7 +68,7 @@ public class UserController {
     }
 
 
-    @GetMapping(value = {"/users/{id}"})
+    @GetMapping(value = {Routes.GET_users_by_id})
     // @PreAuthorize("hasAuthority('OP_ACCESS_USER')")
     public ResponseEntity<Object> getUser(@PathVariable(value = "id") Long id) {
         Users user = userService.findUser(id).orElse(null);
