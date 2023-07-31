@@ -40,4 +40,6 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
     Users findByQuery(@Param("email") String email);
 
     Page<Users> findAll(Specification<Users> postSpec , Pageable pageable );
+    Page<Users> findAllByUserType(int userType , Pageable pageable );
+
 }

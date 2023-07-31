@@ -69,6 +69,17 @@ public class UserController {
     }
 
 
+    @GetMapping(value = {Routes.Get_damdar})
+    public List<Users> getAllDamDar(
+            @RequestParam(required = false, defaultValue = "id") String sort,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "10") int perPage,
+            HttpServletResponse response) {
+        logger.info("try to get damdar list.");
+        return userService.findDamDar(page, perPage, sort);
+    }
+
+
     @GetMapping(value = {Routes.GET_users_by_id})
     // @PreAuthorize("hasAuthority('OP_ACCESS_USER')")
     public ResponseEntity<Object> getUser(@PathVariable(value = "id") Long id) {

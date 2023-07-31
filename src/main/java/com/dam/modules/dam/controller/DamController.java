@@ -49,7 +49,7 @@ public class DamController {
 
     @GetMapping(value = {Routes.Get_owner_dams})
     public ResponseEntity<Object> findDams(
-            @RequestParam(required = false, defaultValue = "") String ownerId,
+            @PathVariable(required = false) String ownerId,
             @RequestParam(required = false, defaultValue = "id") String sort,
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "10") int perPage,
@@ -68,7 +68,7 @@ public class DamController {
 
     @GetMapping(value = {Routes.Get_dam_status})
     public ResponseEntity<Object> findDamStatus(
-            @RequestParam() String damId,
+            @PathVariable String damId,
             @RequestParam(required = false, defaultValue = "id") String sort,
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "10") int perPage,
@@ -77,6 +77,36 @@ public class DamController {
             List<DamStatus> damStatusList = this.damService.findAllDamStatus(sort, page, perPage, damId);
             return ResponseEntity.ok()
                     .body(damStatusList);
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    JsonResponseBodyTemplate.
+                            createResponseJson("fail", HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()).toString(),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping(value = {Routes.POST_dam_status})
+    public ResponseEntity<Object> addDamStatus(
+            @PathVariable String damId,
+            @RequestParam String statusString,
+            @RequestParam(required = false, defaultValue = "id") String sort,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "10") int perPage,
+            HttpServletResponse response) {
+        try {
+
+
+            /*
+             *
+             * to do:
+             *     check dam by dam id
+             *     create status dto
+             *     save damStatus
+             */
+
+            return ResponseEntity.ok()
+                    .body("");
+
         } catch (Exception e) {
             return new ResponseEntity<>(
                     JsonResponseBodyTemplate.

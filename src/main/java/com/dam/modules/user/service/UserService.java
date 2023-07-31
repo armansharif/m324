@@ -68,7 +68,7 @@ public class UserService implements UserDetailsService {
         //   return "code" + users.getMobile().substring((users.getMobile().length() - 4), users.getMobile().length());
     }
 
-    public String verificationUser(String mobile ) {
+    public String verificationUser(String mobile) {
         env.getProperty("dam.urlUserImage");
 
         String response = "";
@@ -268,11 +268,19 @@ public class UserService implements UserDetailsService {
         }
     }
 
+    public List<Users> findDamDar(int page, int perPage, String sort) {
+        Pageable postSortedAndPagination =
+                PageRequest.of(page, perPage, Sort.by(sort).ascending());
+        Page<Users> pagedResult = this.usersRepository.findAllByUserType(1, postSortedAndPagination);
+        if (pagedResult.hasContent()) {
+            return pagedResult.getContent();
+        } else {
+            return new ArrayList<Users>();
+        }
+    }
 
     public Optional<Users> findUser(Long id) {
         return this.usersRepository.findById(id);
-
-
     }
 
     public Users findUserByMobile(String mobile) {
