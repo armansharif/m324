@@ -3,6 +3,7 @@ package com.dam.modules.dam.controller;
 import com.dam.commons.Routes;
 import com.dam.config.JsonResponseBodyTemplate;
 import com.dam.modules.dam.model.Dam;
+import com.dam.modules.dam.model.DamStatus;
 import com.dam.modules.jwt.JwtUtils;
 import com.dam.modules.user.model.Users;
 import com.dam.modules.user.service.UserService;
@@ -57,6 +58,25 @@ public class DamController {
             List<Dam> damList = this.damService.findAll(sort, page, perPage, ownerId);
             return ResponseEntity.ok()
                     .body(damList);
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    JsonResponseBodyTemplate.
+                            createResponseJson("fail", HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()).toString(),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping(value = {Routes.Get_dam_status})
+    public ResponseEntity<Object> findDamStatus(
+            @RequestParam() String damId,
+            @RequestParam(required = false, defaultValue = "id") String sort,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "10") int perPage,
+            HttpServletResponse response) {
+        try {
+            List<DamStatus> damStatusList = this.damService.findAllDamStatus(sort, page, perPage, damId);
+            return ResponseEntity.ok()
+                    .body(damStatusList);
         } catch (Exception e) {
             return new ResponseEntity<>(
                     JsonResponseBodyTemplate.

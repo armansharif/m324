@@ -1,6 +1,7 @@
 package com.dam.modules.dam.repository;
 
 import com.dam.modules.dam.model.Dam;
+import com.dam.modules.dam.model.DamStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,5 +23,7 @@ public interface DamRepository extends JpaRepository<Dam,Long> {
     List<Dam> findAllDam(Pageable pageable);
     @Query(nativeQuery = true, value = "select * from dam where users_id =:userId     ")
     List<Dam> findDamByOwner(@Param("userId") String userId, Pageable pageable);
+
+
 
 }

@@ -200,30 +200,30 @@ public class UserController {
         }
 
 
-        if (email != null) {
-            if (userService.findUserByEmail(email) != null) {
-                logger.info(" Email Exist");
-                JSONObject unSuccessfulLogin = new JSONObject();
-                unSuccessfulLogin.put("code", response.getStatus());
-                unSuccessfulLogin.put("token", "");
-                unSuccessfulLogin.put("status", "fail");
-                unSuccessfulLogin.put("message", "Email already exist! please use another email.");
-                return ResponseEntity.badRequest().body(unSuccessfulLogin.toString());
-            }
-        }
+//        if (email != null) {
+//            if (userService.findUserByEmail(email) != null) {
+//                logger.info(" Email Exist");
+//                JSONObject unSuccessfulLogin = new JSONObject();
+//                unSuccessfulLogin.put("code", response.getStatus());
+//                unSuccessfulLogin.put("token", "");
+//                unSuccessfulLogin.put("status", "fail");
+//                unSuccessfulLogin.put("message", "Email already exist! please use another email.");
+//                return ResponseEntity.badRequest().body(unSuccessfulLogin.toString());
+//            }
+//        }
 
-        if (username != null) {
-            Users userCheck = userService.findUserByUserName(username);
-            if (userCheck != null) {
-                logger.info(" username exist");
-                JSONObject unSuccessfulLogin = new JSONObject();
-                unSuccessfulLogin.put("code", response.getStatus());
-                unSuccessfulLogin.put("token", "");
-                unSuccessfulLogin.put("status", "fail");
-                unSuccessfulLogin.put("message", "UserName already exist! please use UserName.");
-                return ResponseEntity.badRequest().body(unSuccessfulLogin.toString());
-            }
-        }
+//        if (username != null) {
+//            Users userCheck = userService.findUserByUserName(username);
+//            if (userCheck != null) {
+//                logger.info(" username exist");
+//                JSONObject unSuccessfulLogin = new JSONObject();
+//                unSuccessfulLogin.put("code", response.getStatus());
+//                unSuccessfulLogin.put("token", "");
+//                unSuccessfulLogin.put("status", "fail");
+//                unSuccessfulLogin.put("message", "UserName already exist! please use UserName.");
+//                return ResponseEntity.badRequest().body(unSuccessfulLogin.toString());
+//            }
+//        }
         boolean isverify = false;
         JSONObject successfulLogin = new JSONObject();
         JSONObject unSuccessfulLogin = new JSONObject();

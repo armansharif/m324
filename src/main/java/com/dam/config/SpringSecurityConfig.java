@@ -1,5 +1,6 @@
 package com.dam.config;
 
+import com.dam.commons.Routes;
 import com.dam.modules.jwt.JwtFilter;
 import com.dam.modules.user.service.UserService;
 import org.json.JSONObject;
@@ -38,10 +39,21 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .csrf().disable()
-              //  .cors().disable()
+                //  .cors().disable()
                 .authorizeRequests()
-                .antMatchers("/", "/verify/mobile", "/verify/email","/auth/mobile", "/auth/email","/login","/resetPass/email","/resetPass/mobile","/admin/login","/forgetPass/email","/forgetPass/mobile").permitAll()
-                .antMatchers(   "/dam/**","/upload/**","/test/**").permitAll()
+                .antMatchers("/",
+                        Routes.POST_user_verify_email,
+                        Routes.POST_user_verify_mobile,
+                        Routes.POST_user_auth_email,
+                        Routes.POST_user_auth_mobile,
+                        Routes.POST_login,
+                        Routes.POST_reset_pass_email,
+                        Routes.POST_reset_pass_mobile,
+                        Routes.POST_admin_login,
+                        Routes.POST_forget_pass_email,
+                        Routes.POST_forget_pass_mobile
+                ).permitAll()
+                .antMatchers("/upload/**", "/test/**").permitAll()//   "/dam/**"
                 .anyRequest().authenticated()
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and().addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

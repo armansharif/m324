@@ -1,6 +1,7 @@
 package com.dam.modules.dam.service;
 
 import com.dam.modules.dam.model.Dam;
+import com.dam.modules.dam.model.DamStatus;
 import com.dam.modules.dam.repository.DamStatusRepository;
 import com.dam.modules.dam.repository.DamRepository;
 
@@ -73,7 +74,7 @@ public class DamService {
     }
 
     @Transactional
-    public Dam addDam(Dam dam ) throws IOException {
+    public Dam addDam(Dam dam) throws IOException {
 
         Dam dam_saved = this.damRepository.save(dam);
         return dam_saved;
@@ -104,6 +105,15 @@ public class DamService {
             return damRepository.findDamByOwner(userId, sortedAndPagination);
         }
 
+    }
+
+    public List<DamStatus> findAllDamStatus(String sort,
+                                            int page,
+                                            int perPage,
+                                            String damId) {
+        Pageable sortedAndPagination =
+                PageRequest.of(page, perPage, Sort.by(sort).ascending());
+        return damStatusRepository.findAllDamStatus(damId, sortedAndPagination);
     }
 
     public Optional<Dam> findDam(Long id) {

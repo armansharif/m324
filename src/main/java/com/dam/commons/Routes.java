@@ -28,8 +28,9 @@ public class Routes {
     public final static String POST_admin_login = "/admin/login";
     public final static String POST_admin_users = "/admin/users";
 
-    public final static String Get_owner_dams = "/dam/{ownerId}";
-    public final static String Get_dam = "/dam/{id}";
+    public final static String Get_owner_dams = "/dam";
+
+    public final static String Get_dam_status = "/damStatus";
     public final static String POST_dam_add = "/dam/add";
     public final static String DELETE_dam_delete = "/dam/delete/{id}";
     public final static String PUT_dam_edit = "/dam/edit/{id}";
