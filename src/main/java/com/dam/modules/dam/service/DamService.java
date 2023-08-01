@@ -1,5 +1,9 @@
 package com.dam.modules.dam.service;
 
+import com.dam.commons.CommonHandledException;
+import com.dam.commons.DamExceptionType;
+import com.dam.commons.exception.MyExceptionHandler;
+import com.dam.commons.exception.UserServiceException;
 import com.dam.modules.dam.model.Dam;
 import com.dam.modules.dam.model.DamStatus;
 import com.dam.modules.dam.repository.DamStatusRepository;
@@ -97,6 +101,10 @@ public class DamService {
                              int page,
                              int perPage,
                              String userId) {
+
+//        if(page==1){
+//            throw new UserServiceException("User   not found");
+//        }
         Pageable sortedAndPagination =
                 PageRequest.of(page, perPage, Sort.by(sort).ascending());
         if (userId.isEmpty()) {
