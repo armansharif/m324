@@ -1,6 +1,6 @@
 package com.dam.modules.user.model;
 
-import com.dam.modules.dam.model.Dam;
+import com.dam.modules.dam.model.Damdari;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
@@ -65,9 +65,11 @@ public class Users implements Serializable, UserDetails {
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     private List<Addresses> addresses;
 
-    @JsonManagedReference
-    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
-    private List<Dam> dams;
+//    @JsonManagedReference
+//    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
+//    private List<Dam> dams;
+
+
 
     private int userType=1;//1 damdar
 
@@ -85,6 +87,16 @@ public class Users implements Serializable, UserDetails {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    @JsonManagedReference
+    @ManyToMany(fetch = FetchType.LAZY,
+            cascade = {
+                    CascadeType.PERSIST,
+                    CascadeType.MERGE
+            })
+    @JoinTable(name = "users_damdari",
+            joinColumns = { @JoinColumn(name = "user_id") },
+            inverseJoinColumns = { @JoinColumn(name = "damdari_id") })
+    private Set<Damdari> damdari = new HashSet<>();
 
     public Users() {
     }
@@ -281,13 +293,13 @@ public class Users implements Serializable, UserDetails {
     }
 
 
-    public List<Dam> getDams() {
-        return dams;
-    }
-
-    public void setDams(List<Dam> dams) {
-        this.dams = dams;
-    }
+//    public List<Dam> getDams() {
+//        return dams;
+//    }
+//
+//    public void setDams(List<Dam> dams) {
+//        this.dams = dams;
+//    }
 
     public int getUserType() {
         return userType;

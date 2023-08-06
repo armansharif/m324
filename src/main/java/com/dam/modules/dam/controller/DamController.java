@@ -9,11 +9,19 @@ import com.dam.modules.user.model.Users;
 import com.dam.modules.user.service.UserService;
 import com.dam.modules.dam.service.DamStatusService;
 import com.dam.modules.dam.service.DamService;
+import liquibase.pro.packaged.is;
+import net.kaczmarzyk.spring.data.jpa.domain.Equal;
+import net.kaczmarzyk.spring.data.jpa.domain.Like;
+import net.kaczmarzyk.spring.data.jpa.web.annotation.And;
+import net.kaczmarzyk.spring.data.jpa.web.annotation.Or;
+import net.kaczmarzyk.spring.data.jpa.web.annotation.Spec;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -47,17 +55,54 @@ public class DamController {
     }
 
 
-    @GetMapping(value = {Routes.Get_owner_dams})
-    public ResponseEntity<Object> findDams(
-            @PathVariable(required = false) String ownerId,
+    @GetMapping(value = {Routes.Get_damdari_dams})
+    public ResponseEntity<Object> findDamsOfDamdari(
+            @PathVariable(required = false) String damdariId,
+            @RequestParam(required = false, defaultValue = "0") String isFahli,
+            @RequestParam(required = false, defaultValue = "0") String hasLangesh,
+            @RequestParam(required = false, defaultValue = "1") String typeId,
             @RequestParam(required = false, defaultValue = "id") String sort,
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "10") int perPage,
             HttpServletResponse response) {
         try {
-            List<Dam> damList = this.damService.findAll(sort, page, perPage, ownerId);
+            List<Dam> damList = this.damService.findAllDamsOfDamdari(sort, page, perPage, damdariId, isFahli,hasLangesh,typeId);
             return ResponseEntity.ok()
                     .body(damList);
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    JsonResponseBodyTemplate.
+                            createResponseJson("fail", HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()).toString(),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping(value = {Routes.Get_dams})
+    public List<Dam> getAllDams(
+            @And({
+                    @Spec(path = "isFahli", spec = Equal.class),
+                    @Spec(path = "typeId", spec = Equal.class),
+                    @Spec(path = "hasLangesh", spec = Equal.class)
+            }) Specification<Dam> spec,
+            @RequestParam(required = false, defaultValue = "id") String sort,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "10") int perPage,
+            HttpServletResponse response) {
+        return damService.findAll(sort, page, perPage, spec);
+    }
+
+    @GetMapping(value = {Routes.Get_dam})
+    public ResponseEntity<Object> findDam(
+            @PathVariable String damId,
+            @RequestParam(required = false, defaultValue = "id") String sort,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "10") int perPage,
+            HttpServletResponse response) {
+        try {
+            Dam dam = this.damService.findDam(damId).get();
+            dam.setDamStatus(this.damService.findAllDamStatus("id", 0, 100, damId));
+            return ResponseEntity.ok()
+                    .body(dam);
         } catch (Exception e) {
             return new ResponseEntity<>(
                     JsonResponseBodyTemplate.
@@ -152,7 +197,7 @@ public class DamController {
             if (user_id != null) {
                 Optional<Users> user = this.userService.findUser(user_id);
                 if (user.isPresent()) {
-                    dam.setUsers(user.get());
+                    //     dam.setUsers(user.get());
                 }
             }
             if (jsonObject.has("device_id"))
@@ -172,34 +217,34 @@ public class DamController {
         }
     }
 
-
-    @PutMapping(value = {"/dam/check", "/dam/check/"})
-    public ResponseEntity<Object> checkDam(
-            @RequestParam Long dam_id,
-            @RequestParam boolean is_check,
-            HttpServletResponse response) {
-        try {
-            Dam dam = damService.findDam(dam_id).orElse(null);
-            if (dam != null) {
-
-                dam.setChecked(is_check);
-                damService.saveDam(dam);
-                return ResponseEntity.ok()
-                        .body(dam);
-            } else {
-                return new ResponseEntity<>(
-                        JsonResponseBodyTemplate.
-                                createResponseJson("fail", HttpStatus.INTERNAL_SERVER_ERROR.value(), "Dam not found").toString(),
-                        HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-
-        } catch (Exception e) {
-            return new ResponseEntity<>(
-                    JsonResponseBodyTemplate.
-                            createResponseJson("fail", HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()).toString(),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-    }
+//
+//    @PutMapping(value = {"/dam/check", "/dam/check/"})
+//    public ResponseEntity<Object> checkDam(
+//            @RequestParam Long dam_id,
+//            @RequestParam boolean is_check,
+//            HttpServletResponse response) {
+//        try {
+//            Dam dam = damService.findDam(dam_id).orElse(null);
+//            if (dam != null) {
+//
+//               // dam.setChecked(is_check);
+//                damService.saveDam(dam);
+//                return ResponseEntity.ok()
+//                        .body(dam);
+//            } else {
+//                return new ResponseEntity<>(
+//                        JsonResponseBodyTemplate.
+//                                createResponseJson("fail", HttpStatus.INTERNAL_SERVER_ERROR.value(), "Dam not found").toString(),
+//                        HttpStatus.INTERNAL_SERVER_ERROR);
+//            }
+//
+//        } catch (Exception e) {
+//            return new ResponseEntity<>(
+//                    JsonResponseBodyTemplate.
+//                            createResponseJson("fail", HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()).toString(),
+//                    HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+//
+//    }
 
 }

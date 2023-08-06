@@ -2,7 +2,6 @@ package com.dam.modules.dam.model;
 
 import com.fasterxml.jackson.annotation.*;
 
-import com.dam.modules.user.model.Users;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -52,15 +51,19 @@ public class Dam implements Serializable {
     private LocalDateTime updatedAt;
 
 
-    private boolean isChecked = false;
-
     @JsonBackReference
     @ManyToOne(cascade = CascadeType.ALL)
-    private Users users;
+    private Damdari damdari;
 
 
-    @JsonIgnore
+
     @OneToMany(mappedBy = "dam", cascade = CascadeType.ALL)
     private List<DamStatus> damStatus;
+
+    private int isFahli=0;
+
+    private int hasLangesh=0;
+
+    private int avgOfShirdehi=0;
 
 }

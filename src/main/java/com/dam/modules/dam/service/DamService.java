@@ -38,7 +38,6 @@ public class DamService {
     private DamRepository damRepository;
 
     private DamStatusRepository damStatusRepository;
-    private Java2DFrameConverter aa;
 
     @Autowired
     public DamService(DamRepository damRepository, DamStatusRepository damStatusRepository) {
@@ -97,23 +96,19 @@ public class DamService {
         return damRepository.findAll(spec, sortedAndPagination);
     }
 
-    public List<Dam> findAll(String sort,
-                             int page,
-                             int perPage,
-                             String userId) {
-
-//        if(page==1){
-//            throw new UserServiceException("User   not found");
-//        }
+    public List<Dam> findAllDamsOfDamdari(String sort,
+                                          int page,
+                                          int perPage,
+                                          String damdariId,
+                                          String isFahli,
+                                          String hasLangesh,
+                                          String typeId) {
         Pageable sortedAndPagination =
                 PageRequest.of(page, perPage, Sort.by(sort).ascending());
-        if (userId.isEmpty()) {
-            return damRepository.findAllDam(sortedAndPagination);
-        } else {
-            return damRepository.findDamByOwner(userId, sortedAndPagination);
-        }
 
+        return damRepository.findDamsOfDamdari(damdariId,isFahli,hasLangesh,typeId, sortedAndPagination);
     }
+
 
     public List<DamStatus> findAllDamStatus(String sort,
                                             int page,
@@ -124,7 +119,8 @@ public class DamService {
         return damStatusRepository.findAllDamStatus(damId, sortedAndPagination);
     }
 
-    public Optional<Dam> findDam(Long id) {
-        return this.damRepository.findById(id);
+    public Optional<Dam> findDam(String damId) {
+
+        return this.damRepository.findDam(damId);
     }
 }

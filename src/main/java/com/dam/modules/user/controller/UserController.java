@@ -13,7 +13,6 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -69,15 +68,6 @@ public class UserController {
     }
 
 
-    @GetMapping(value = {Routes.Get_damdar})
-    public List<Users> getAllDamDar(
-            @RequestParam(required = false, defaultValue = "id") String sort,
-            @RequestParam(required = false, defaultValue = "0") int page,
-            @RequestParam(required = false, defaultValue = "10") int perPage,
-            HttpServletResponse response) {
-        logger.info("try to get damdar list.");
-        return userService.findDamDar(page, perPage, sort);
-    }
 
 
     @GetMapping(value = {Routes.GET_users_by_id})
