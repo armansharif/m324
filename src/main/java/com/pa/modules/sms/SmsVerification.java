@@ -131,10 +131,10 @@ public class SmsVerification {
 
         String jsonParameterSTR = "{"
                 + " \"ParameterArray\":["
-                + "{ \"Parameter\": \"VerificationCode\",\"ParameterValue\": \"" + vcode + "\"}"
+                + "{ \"Parameter\": \"code\",\"ParameterValue\": \"" + vcode + "\"}"
                 + "],"
                 + "\"Mobile\":\"" + mobile + "\","
-                + "\"TemplateId\":\"29077\""
+                + "\"TemplateId\":\"78981\""
                 + "}";
         String url = "http://RestfulSms.com/api/UltraFastSend";
         URL obj = new URL(url);
@@ -227,8 +227,8 @@ public class SmsVerification {
 
 
         String POST_PARAMS = "{ "
-                + "  \"UserApiKey\": \"26285215aaf20392f71c4ddc\", "
-                + "  \"SecretKey\": \"R@diC@lHomeKeYsmsArmanSH@rif8503\" "
+                + "  \"UserApiKey\": \"65c612af201dbbdd9c6012af\", "
+                + "  \"SecretKey\": \"kalashahr123!@#\" "
                 + "}";
         con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
         // For POST only - START

@@ -1,7 +1,9 @@
 package com.pa.modules.user.controller;
 
+import com.pa.commons.CommonUtils;
 import com.pa.commons.Routes;
 import com.pa.config.JsonResponseBodyTemplate;
+import com.pa.modules.committee.consts.ConstCommittee;
 import com.pa.modules.jwt.JwtUtils;
 import com.pa.modules.user.model.Users;
 import com.pa.modules.user.service.AddressesService;
@@ -9,6 +11,7 @@ import com.pa.modules.user.service.UserService;
 import net.kaczmarzyk.spring.data.jpa.domain.Like;
 import net.kaczmarzyk.spring.data.jpa.web.annotation.And;
 import net.kaczmarzyk.spring.data.jpa.web.annotation.Spec;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,8 +71,6 @@ public class UserController {
     }
 
 
-
-
     @GetMapping(value = {Routes.GET_users_by_id})
     // @PreAuthorize("hasAuthority('OP_ACCESS_USER')")
     public ResponseEntity<Object> getUser(@PathVariable(value = "id") Long id) {
@@ -86,8 +87,15 @@ public class UserController {
     // @PreAuthorize("hasAuthority('OP_ACCESS_USER')")
     public ResponseEntity<Object> getUserByToken(HttpServletRequest request) {
         Long user_id = jwtUtils.getUserId(request);
+
+        if (user_id == null)
+            return ResponseEntity.notFound().build();
+
         Users user = userService.findUser(user_id).orElse(null);
         if (user != null) {
+
+            user.setPresentedUsers(userService.findPresentedUsers(user));
+
             return ResponseEntity.ok()
                     .body(user);
         } else {
@@ -178,41 +186,66 @@ public class UserController {
     public ResponseEntity<?> verificationUser(
             @RequestParam String mobile,
             @RequestParam String code,
-            @RequestParam (required = false) String username,
-            @RequestParam (required = false) String password,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) String password,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String family,
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String address,
             @RequestParam(required = false) String ref,
             @RequestParam(required = false) String expertise,
-            @RequestParam(required = false) String education,
+            @RequestParam(required = false) Long education,
+            @RequestParam(required = false) Long university,
+            @RequestParam(required = false) Long districtId,
             @RequestParam(required = false) MultipartFile file,
             HttpServletResponse response) {
         mobile = jwtUtils.arabicToDecimal(mobile);
 
         Users user = userService.findUserByMobile(mobile);
-
+        JSONObject res = new JSONObject();
         if (user == null) {
             logger.info(" verification failed");
-            JSONObject unSuccessfulLogin = new JSONObject();
-            unSuccessfulLogin.put("code", response.getStatus());
-            unSuccessfulLogin.put("token", "");
-            unSuccessfulLogin.put("status", "fail");
-            unSuccessfulLogin.put("message", "User not found");
-            return ResponseEntity.badRequest().body(unSuccessfulLogin.toString());
+            res = new JSONObject();
+            res.put("code", response.getStatus());
+            res.put("token", "");
+            res.put("status", "fail");
+            res.put("message", "User not found");
+            return ResponseEntity.badRequest().body(res.toString());
+        }
+        Users refUser = null;
+        if (CommonUtils.isNull(user.getRefUser())) {
+            if (ref == null || ref.isEmpty()) {
+                res = new JSONObject();
+                res.put("code", response.getStatus());
+                res.put("token", "");
+                res.put("status", "fail");
+                res.put("message", " کد ستاد اجباری می باشد");
+                return ResponseEntity.badRequest().body(res.toString());
+            }
+            refUser = userService.findUserByRefCode(ref);
+
+            if (refUser == null) {
+                logger.info(" verification failed");
+                res = new JSONObject();
+                res.put("code", response.getStatus());
+                res.put("token", "");
+                res.put("status", "fail");
+                res.put("message", " کد معرف معتبر نمی باشد");
+                return ResponseEntity.badRequest().body(res.toString());
+            }
         }
 
 
-        if ( ref == null || ref.isEmpty()  ) {
-                JSONObject unSuccessfulLogin = new JSONObject();
-                unSuccessfulLogin.put("code", response.getStatus());
-                unSuccessfulLogin.put("token", "");
-                unSuccessfulLogin.put("status", "fail");
-                unSuccessfulLogin.put("message", " کد ستاد اجباری می باشد");
-                return ResponseEntity.badRequest().body(unSuccessfulLogin.toString());
-        }
+        String refCode = null;
 
+        if (CommonUtils.isNull(user.getRefCode()))
+            refCode = ConstCommittee.PERFIX_SETAD_REF + StringUtils.leftPad(Long.toString(user.getId()), 5, "0");// userService.generateAutoIncremantString(user.getId(), 6);
+
+
+        String headCode = null;
+
+        if (CommonUtils.isNull(user.getHeadCode()))
+            headCode = userService.generateCodeForUser(education, university, districtId, user);
 
 //        if (username != null) {
 //            Users userCheck = userService.findUserByUserName(username);
@@ -227,34 +260,46 @@ public class UserController {
 //            }
 //        }
         boolean isverify = false;
-        JSONObject successfulLogin = new JSONObject();
-        JSONObject unSuccessfulLogin = new JSONObject();
+
         if (!userService.checkVerificationUser(mobile, code).isPresent()) {
             logger.info(" verification failed");
-            unSuccessfulLogin.put("code", response.getStatus());
-            unSuccessfulLogin.put("token", "");
-            unSuccessfulLogin.put("status", "fail");
-            unSuccessfulLogin.put("message", "The verification code has expired or was entered incorrectly.");
-            return ResponseEntity.badRequest().body(unSuccessfulLogin.toString());
+            res.put("code", response.getStatus());
+            res.put("token", "");
+            res.put("status", "fail");
+            res.put("message", "The verification code has expired or was entered incorrectly.");
+            return ResponseEntity.badRequest().body(res.toString());
         } else {
             String token = jwtUtils.generateToken(username, user.getId());
             response.addHeader("Authorization", token);
 
-            successfulLogin.put("code", response.getStatus());
-            successfulLogin.put("token", token);
-            successfulLogin.put("status", "success");
-            successfulLogin.put("message", "The token was created successfully. ");
+            res.put("code", response.getStatus());
+            res.put("token", token);
+            res.put("status", "success");
+            res.put("message", "The token was created successfully. ");
             logger.info(" verification successful");
         }
         //update user
         try {
-            Users user_saved = userService.updateUser(user.getId(), name, family, email, mobile, username, password, address,education,ref,expertise, file);
+            Users user_saved = userService.updateUser(user.getId(), name, family, email, mobile, username, password, address, education, refUser, expertise, districtId, university, refCode,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    headCode,
+                    file);
             if (user_saved == null) {
                 return new ResponseEntity<>(
                         JsonResponseBodyTemplate.
                                 createResponseJson("fail", HttpStatus.NOT_FOUND.value(), "Unfortunately, there was a problem.").toString(),
                         HttpStatus.NOT_FOUND);
             }
+
+            //SET BASE SCORE OF USER
+
         } catch (IOException e) {
             return new ResponseEntity<>(
                     JsonResponseBodyTemplate.
@@ -262,7 +307,7 @@ public class UserController {
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return ResponseEntity.ok()
-                .body(successfulLogin.toString());
+                .body(res.toString());
     }
 
 
@@ -544,22 +589,57 @@ public class UserController {
     @PutMapping(value = {Routes.PUT_profile})
     // @PreAuthorize("hasAuthority('OP_ACCESS_PUBLIC')")
     public ResponseEntity<Object> updateUser(
-            @RequestParam String name,
-            @RequestParam String family,
-            @RequestParam String address,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String family,
+            @RequestParam(required = false) String address,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) Long education,
+            @RequestParam(required = false) Long districtId,
+            @RequestParam(required = false) Long university,
+            @RequestParam(required = false) Long reasonSelectCommittee,
+            @RequestParam(required = false) Integer yearOfService,
+            @RequestParam(required = false) Integer eliteMembership,
+            @RequestParam(required = false) Integer gpa,
+            @RequestParam(required = false) Integer authoredBook,
+            @RequestParam(required = false) Integer translatedBook,
+            @RequestParam(required = false) Integer articles,
+            @RequestParam(required = false) Integer workExperience,
             @RequestParam(required = false) MultipartFile file,
             HttpServletRequest request
     ) {
         try {
-
             Long user_id = jwtUtils.getUserId(request);
             Users user = userService.findUser(user_id).orElse(null);
             if (user != null) {
-                name = jwtUtils.urlDecode(name);
-                family = jwtUtils.urlDecode(family);
-                address = jwtUtils.urlDecode(address);
+//                name = jwtUtils.urlDecode(name);
+//                family = jwtUtils.urlDecode(family);
+//                address = jwtUtils.urlDecode(address);
 
-                Users user_saved = userService.updateUser(user_id, name, family, null, null, null, null, address, file);
+                Users user_saved = userService.updateUser(
+                        user_id,
+                        name,
+                        family,
+                        email,
+                        null,
+                        null,
+                        null,
+                        address,
+                        education,
+                        null,
+                        null,
+                        districtId,
+                        university,
+                        null,
+                        reasonSelectCommittee,
+                        yearOfService,
+                        eliteMembership,
+                        gpa,
+                        authoredBook,
+                        translatedBook,
+                        articles,
+                        workExperience,
+                        null,
+                        file);
                 if (user_saved != null) {
                     return ResponseEntity.ok()
                             .body(user_saved);
@@ -575,7 +655,6 @@ public class UserController {
                                 createResponseJson("fail", HttpStatus.NOT_FOUND.value(), "user not found").toString(),
                         HttpStatus.NOT_FOUND);
             }
-
 
         } catch (Exception e) {
             return new ResponseEntity<>(

@@ -9,7 +9,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface UsersRepository extends JpaRepository<Users, Long> {
@@ -17,6 +19,10 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
     Users findByEmail(String email);
 
     Users findByMobile(String mobile);
+
+    Users findByRefCode(String refCode);
+
+    Set<Users> findAllByRefUser(Users refUser);
 
     Users findByUsername(String username);
 
@@ -42,4 +48,5 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
     Page<Users> findAll(Specification<Users> postSpec , Pageable pageable );
     Page<Users> findAllByUserType(int userType , Pageable pageable );
 
-}
+
+    }

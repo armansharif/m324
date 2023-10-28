@@ -5,13 +5,36 @@ public class Routes {
     public final static String POST_user_verify_mobile = "/verify/mobile";
     public final static String POST_user_auth_mobile = "/auth/mobile";
 
-
-
-    public final static String GET_users_admin = "/admin/users";
-    public final static String GET_users_by_id = "/users/{id}";
-    public final static String PUT_profile = "/profile";
+    public final static String GET_location_city = "/location/city/{stateId}";
+    public final static String GET_location_district = "/location/district/{cityId}";
+    public final static String GET_location_state = "/location/state";
 
     public final static String GET_profile = "/profile";
+
+    public final static String GET_news_post = "/news/post";
+    public final static String POST_news_post_like = "/news/post/like/{postId}";
+    public final static String POST_news_post_dislike = "/news/post/dislike/{postId}";
+    public final static String POST_news_post_double_like = "/news/post/doubleLike/{postId}";
+    public final static String POST_news_post_double_dislike = "/news/post/doubleDislike/{postId}";
+
+    public final static String GET_news_category = "/news/category";
+
+
+    public final static String GET_committee= "/committee";
+    public final static String POST_committee_request= "/committee/request";
+    public final static String GET_committee_requests= "committee/requests";
+
+    public final static String POST_committee_request_accept= "/committee/request/accept";
+    public final static String POST_committee_request_reject= "/committee/request/reject";
+    public final static String GET_notifications= "/notifications";
+    public final static String POST_notification_read= "/notification/read/{id}";
+
+    public final static String PUT_profile = "/profile";
+    //--------------------------------------------
+    public final static String GET_users_admin = "/admin/users";
+    public final static String GET_users_by_id = "/users/{id}";
+
+
 
 
 

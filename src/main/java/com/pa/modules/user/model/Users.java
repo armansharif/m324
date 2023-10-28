@@ -1,7 +1,12 @@
 package com.pa.modules.user.model;
 
 import com.pa.modules.committee.model.Committee;
-import com.pa.modules.dam.model.Damdari;
+
+import com.pa.modules.committee.model.MembersDTO;
+import com.pa.modules.committee.model.MembershipRequest;
+
+import com.pa.modules.location.model.District;
+import com.pa.modules.notification.model.Notification;
 import com.pa.modules.ticketing.model.Ticket;
 import com.pa.modules.ticketing.model.TicketResponse;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -29,84 +34,104 @@ public class Users implements Serializable, UserDetails {
     private Long id;
 
 
+    @JsonIgnore
     @Column(unique = false)
     private String email;
 
+    private Integer baseScore;
 
     @Column(unique = true)
     private String mobile;
 
 
-
     @JsonIgnore
     private String password;
+    @JsonIgnore
     private boolean enabled = true;
 
-    private String code;
 
+    private String headCode;
+
+    //  @Column(unique = true)
     private String refCode;
 
+
+    @JsonIgnore
     @Column(unique = false)
     private String username;
 
     @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "ref_user_id")
+    private Users refUser;
+    @JsonIgnore
     private String adminPassword;
 
-
-
+    @JsonIgnore
     private String expertise;
 
-    @JsonManagedReference
+    @JsonIgnore
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
     private Set<Roles> roles = new HashSet<>();
 
     private String name;
+
+    @JsonIgnore
     private String family;
     @Lob
     @Column(length = 512)
     private String address;
 
-    @JsonManagedReference
+    @JsonIgnore
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     private List<Addresses> addresses;
 
+    @Transient
+    public Set<MembersDTO> presentedUsers;
 
-    private int userType=1;
+    @JsonIgnore
+    private int userType = 1;
 
     private String img;
 
-    private String education;
+    private Long education;
 
+    private Long university;
     @Transient
     @JsonIgnore
     private MultipartFile file;
 
 
-    public String getEducation() {
+    private Long reasonSelectCommittee;
+    private Integer facultyMembership;
+    private Integer eliteMembership;
+    private Integer gpa;
+    private Integer authoredBook;
+    private Integer translatedBook = 0;
+    private Integer articles = 0;
+    private Integer workExperience = 0;
+
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "user")
+    Set<MembershipRequest> membershipRequests;
+
+    public Long getEducation() {
         return education;
     }
 
-    public void setEducation(String education) {
+    public void setEducation(Long education) {
         this.education = education;
     }
 
+    @JsonIgnore
     @Column(name = "created_at", updatable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;
+    @JsonIgnore
     @Column(name = "updated_at")
     @UpdateTimestamp
     private LocalDateTime updatedAt;
-
-    @JsonManagedReference
-    @ManyToMany(fetch = FetchType.LAZY,
-            cascade = {
-                    CascadeType.PERSIST,
-                    CascadeType.MERGE
-            })
-    @JoinTable(name = "users_damdari",
-            joinColumns = { @JoinColumn(name = "user_id") },
-            inverseJoinColumns = { @JoinColumn(name = "damdari_id") })
-    private Set<Damdari> damdari = new HashSet<>();
 
 
     @JsonManagedReference
@@ -116,10 +141,13 @@ public class Users implements Serializable, UserDetails {
                     CascadeType.MERGE
             })
     @JoinTable(name = "committee_membership",
-            joinColumns = { @JoinColumn(name = "user_id") },
-            inverseJoinColumns = { @JoinColumn(name = "committee_id") })
+            joinColumns = {@JoinColumn(name = "user_id")},
+            inverseJoinColumns = {@JoinColumn(name = "committee_id")})
     private Set<Committee> committee = new HashSet<>();
 
+
+    @ManyToOne
+    private District district;
 
     @JsonIgnore
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
@@ -129,6 +157,11 @@ public class Users implements Serializable, UserDetails {
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
     private List<Ticket> ticketList;
 
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
+    private List<Notification> notifications;
+
     public Users() {
     }
 
@@ -137,7 +170,8 @@ public class Users implements Serializable, UserDetails {
         this.password = password;
         this.roles = roles;
     }
-    public Users(String mobile,String email, String password, Set<Roles> roles) {
+
+    public Users(String mobile, String email, String password, Set<Roles> roles) {
         this.mobile = mobile;
         this.email = email;
         this.password = password;
@@ -277,12 +311,12 @@ public class Users implements Serializable, UserDetails {
         this.address = address;
     }
 
-    public String getCode() {
-        return code;
+    public String getHeadCode() {
+        return headCode;
     }
 
-    public void setCode(String code) {
-        this.code = code;
+    public void setHeadCode(String code) {
+        this.headCode = code;
     }
 
     public String getRefCode() {
@@ -338,5 +372,149 @@ public class Users implements Serializable, UserDetails {
 
     public void setUserType(int userType) {
         this.userType = userType;
+    }
+
+    public District getDistrict() {
+        return district;
+    }
+
+    public void setDistrict(District district) {
+        this.district = district;
+    }
+
+    public Set<Committee> getCommittee() {
+        return committee;
+    }
+
+    public void setCommittee(Set<Committee> committee) {
+        this.committee = committee;
+    }
+
+    public List<TicketResponse> getResponseList() {
+        return responseList;
+    }
+
+    public void setResponseList(List<TicketResponse> responseList) {
+        this.responseList = responseList;
+    }
+
+    public List<Ticket> getTicketList() {
+        return ticketList;
+    }
+
+    public void setTicketList(List<Ticket> ticketList) {
+        this.ticketList = ticketList;
+    }
+
+    public Users getRefUser() {
+        return refUser;
+    }
+
+    public void setRefUser(Users refUser) {
+        this.refUser = refUser;
+    }
+
+    public Set<MembersDTO> getPresentedUsers() {
+        return presentedUsers;
+    }
+
+    public void setPresentedUsers(Set<MembersDTO> presentedUsers) {
+        this.presentedUsers = presentedUsers;
+    }
+
+    public Long getUniversity() {
+        return university;
+    }
+
+    public void setUniversity(Long university) {
+        this.university = university;
+    }
+
+    public Set<MembershipRequest> getMembershipRequests() {
+        return membershipRequests;
+    }
+
+    public void setMembershipRequests(Set<MembershipRequest> membershipRequests) {
+        this.membershipRequests = membershipRequests;
+    }
+
+    public Long getReasonSelectCommittee() {
+        return reasonSelectCommittee;
+    }
+
+    public void setReasonSelectCommittee(Long reasonSelectCommittee) {
+        this.reasonSelectCommittee = reasonSelectCommittee;
+    }
+
+    public Integer getFacultyMembership() {
+        return facultyMembership;
+    }
+
+    public void setFacultyMembership(Integer yearOfService) {
+        this.facultyMembership = yearOfService;
+    }
+
+    public Integer getEliteMembership() {
+        return eliteMembership;
+    }
+
+    public void setEliteMembership(Integer eliteMembership) {
+        this.eliteMembership = eliteMembership;
+    }
+
+    public Integer getGpa() {
+        return gpa;
+    }
+
+    public void setGpa(Integer gpa) {
+        this.gpa = gpa;
+    }
+
+    public Integer getAuthoredBook() {
+        return authoredBook;
+    }
+
+    public void setAuthoredBook(Integer authoredBook) {
+        this.authoredBook = authoredBook;
+    }
+
+    public Integer getTranslatedBook() {
+        return translatedBook;
+    }
+
+    public void setTranslatedBook(Integer translatedBook) {
+        this.translatedBook = translatedBook;
+    }
+
+    public Integer getArticles() {
+        return articles;
+    }
+
+    public void setArticles(Integer articles) {
+        this.articles = articles;
+    }
+
+    public Integer getWorkExperience() {
+        return workExperience;
+    }
+
+    public void setWorkExperience(Integer workExperience) {
+        this.workExperience = workExperience;
+    }
+
+    public List<Notification> getNotifications() {
+        return notifications;
+    }
+
+    public void setNotifications(List<Notification> notifications) {
+        this.notifications = notifications;
+    }
+
+    public Integer getBaseScore() {
+        return baseScore;
+    }
+
+    public void setBaseScore(Integer baseScore) {
+        this.baseScore = baseScore;
     }
 }

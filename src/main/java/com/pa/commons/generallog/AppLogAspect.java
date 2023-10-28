@@ -23,29 +23,29 @@ public class AppLogAspect {
     public AppLogAspect(HttpServletRequest request) {
         this.request = request;
     }
-    @Before(value = "execution(* com.pa.modules.dam.service.DamService.*(..))")
-    public void beforeAdvice(JoinPoint joinPoint) {
-        System.out.println("Before method:" + joinPoint.getSignature());
-
-    }
-
-    @After(value = "execution(* com.pa.modules.dam.service.DamService.*(..))")
-    public void afterAdvice(JoinPoint joinPoint) {
-        System.out.println("After method:" + joinPoint.getSignature());
-
-    }
-    @Before(value = "execution(* com.pa.modules.dam.service.DamService.*(..))")
-    public void beforeAdvice2(JoinPoint joinPoint) {
-        String methodName = joinPoint.getSignature().getName();
-        System.out.println("___Before 2 method:" + joinPoint.getSignature());
-        Object[] args = joinPoint.getArgs();
-        String queryString = "";
-        if(Utils.isNotNull(request.getQueryString())){
-            queryString = request.getQueryString();
-        }
-        String reduce = Arrays.stream(args).reduce("", (s, s2) -> s + " " + s2).toString();
-        LOG.debug("before method: {} | argument: {} | queryString: {}",
-                methodName, reduce, queryString);
-        System.out.println("methodName  : "+methodName + "  reduce : "+reduce + " queryString:" +queryString);
-    }
+//    @Before(value = "execution(* com.pa.modules.dam.service.DamService.*(..))")
+//    public void beforeAdvice(JoinPoint joinPoint) {
+//        System.out.println("Before method:" + joinPoint.getSignature());
+//
+//    }
+//
+//    @After(value = "execution(* com.pa.modules.dam.service.DamService.*(..))")
+//    public void afterAdvice(JoinPoint joinPoint) {
+//        System.out.println("After method:" + joinPoint.getSignature());
+//
+//    }
+//    @Before(value = "execution(* com.pa.modules.dam.service.DamService.*(..))")
+//    public void beforeAdvice2(JoinPoint joinPoint) {
+//        String methodName = joinPoint.getSignature().getName();
+//        System.out.println("___Before 2 method:" + joinPoint.getSignature());
+//        Object[] args = joinPoint.getArgs();
+//        String queryString = "";
+//        if(Utils.isNotNull(request.getQueryString())){
+//            queryString = request.getQueryString();
+//        }
+//        String reduce = Arrays.stream(args).reduce("", (s, s2) -> s + " " + s2).toString();
+//        LOG.debug("before method: {} | argument: {} | queryString: {}",
+//                methodName, reduce, queryString);
+//        System.out.println("methodName  : "+methodName + "  reduce : "+reduce + " queryString:" +queryString);
+//    }
 }

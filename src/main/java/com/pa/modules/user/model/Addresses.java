@@ -1,6 +1,7 @@
 package com.pa.modules.user.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 
@@ -14,7 +15,7 @@ public class Addresses {
     private String name;
 
 
-    @JsonBackReference
+    @JsonIgnore
     @ManyToOne(cascade = CascadeType.ALL)
     private Users users;
 
