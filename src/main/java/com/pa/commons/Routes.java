@@ -26,6 +26,7 @@ public class Routes {
 
     public final static String POST_committee_request_accept= "/committee/request/accept";
     public final static String POST_committee_request_reject= "/committee/request/reject";
+    public final static String POST_committee_request_remove= "/committee/request/remove";
     public final static String GET_notifications= "/notifications";
     public final static String POST_notification_read= "/notification/read/{id}";
 

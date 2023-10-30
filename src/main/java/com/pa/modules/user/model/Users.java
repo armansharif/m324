@@ -102,11 +102,11 @@ public class Users implements Serializable, UserDetails {
     private MultipartFile file;
 
 
-    private Long reasonSelectCommittee;
-    private Integer facultyMembership;
-    private Integer eliteMembership;
-    private Integer gpa;
-    private Integer authoredBook;
+    private Integer reasonSelectCommittee=0;
+    private Integer facultyMembership= 0;
+    private Integer eliteMembership= 0;
+    private Integer gpa= 0;
+    private Integer authoredBook= 0;
     private Integer translatedBook = 0;
     private Integer articles = 0;
     private Integer workExperience = 0;
@@ -315,8 +315,8 @@ public class Users implements Serializable, UserDetails {
         return headCode;
     }
 
-    public void setHeadCode(String code) {
-        this.headCode = code;
+    public void setHeadCode(String headCode) {
+        this.headCode = headCode;
     }
 
     public String getRefCode() {
@@ -438,11 +438,11 @@ public class Users implements Serializable, UserDetails {
         this.membershipRequests = membershipRequests;
     }
 
-    public Long getReasonSelectCommittee() {
+    public Integer getReasonSelectCommittee() {
         return reasonSelectCommittee;
     }
 
-    public void setReasonSelectCommittee(Long reasonSelectCommittee) {
+    public void setReasonSelectCommittee(Integer reasonSelectCommittee) {
         this.reasonSelectCommittee = reasonSelectCommittee;
     }
 

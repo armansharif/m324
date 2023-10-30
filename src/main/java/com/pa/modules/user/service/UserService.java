@@ -71,10 +71,10 @@ public class UserService implements UserDetailsService {
     private boolean registrationOnFirstLogin;
 
 
-    public String generateCode(Users users) {
-        return "code";
-        //   return "code" + users.getMobile().substring((users.getMobile().length() - 4), users.getMobile().length());
-    }
+//    public String generateCode(Users users) {
+//        return "code";
+//        //   return "code" + users.getMobile().substring((users.getMobile().length() - 4), users.getMobile().length());
+//    }
 
     public String verificationUser(String mobile) {
         env.getProperty("conf.urlUserImage");
@@ -103,7 +103,7 @@ public class UserService implements UserDetailsService {
                 Set<Roles> roles = new HashSet<>();
                 roles.add(rolesRepository.findRolesByName("user"));
                 user = new Users(mobile, smsCode, roles);
-                user.setHeadCode(generateCode(user));
+             //   user.setHeadCode(generateCode(user));
                 //register new user
                 this.usersRepository.save(user);
             } else {
@@ -140,7 +140,7 @@ public class UserService implements UserDetailsService {
                 Set<Roles> roles = new HashSet<>();
                 roles.add(rolesRepository.findRolesByName("user"));
                 user = new Users(mobile, idOfCM, roles);
-                user.setHeadCode(generateCode(user));
+             //   user.setHeadCode(generateCode(user));
                 user.setEmail(UUID.randomUUID().toString());
                 //register new user
                 this.usersRepository.save(user);
@@ -172,7 +172,7 @@ public class UserService implements UserDetailsService {
                 Set<Roles> roles = new HashSet<>();
                 roles.add(rolesRepository.findRolesByName("user"));
                 user = new Users("", email, smsCode, roles);
-                user.setHeadCode(generateCode(user));
+           //     user.setHeadCode(generateCode(user));
                 user.setMobile(UUID.randomUUID().toString());
                 //register new user
                 this.usersRepository.save(user);
@@ -200,7 +200,7 @@ public class UserService implements UserDetailsService {
             Files.write(Paths.get(path + File.separator + fileName), bytes);
             users.setImg(urlPostImageString + fileName);
         }
-        users.setHeadCode(generateCode(users));
+       // users.setHeadCode(generateCode(users));
         return this.usersRepository.save(users);
     }
 
@@ -280,7 +280,7 @@ public class UserService implements UserDetailsService {
                             Long districtId,
                             Long university,
                             String refCode,
-                            Long reasonSelectCommittee,
+                            Integer reasonSelectCommittee,
                             Integer facultyMembership,
                             Integer eliteMembership,
                             Integer gpa,
@@ -413,8 +413,8 @@ public class UserService implements UserDetailsService {
             district = locationService.findDistrictById(districtId);
             code.append(educationToCharMap.get(edu.intValue()))
                     .append(educationToCharMap.get(uni.intValue()))
-                    .append(district.getCity().getState() == null ? "STT" : district.getCity().getState().getCode())
-                    .append(district.getElectoralDistricts() == null ? "ELEDIS" : district.getElectoralDistricts().getCode())
+                    .append(( district.getCity().getState() == null || district.getCity().getState().getCode()== null) ? "STT" : district.getCity().getState().getCode())
+                    .append(district.getElectoralDistricts() == null ? "ELE" : district.getElectoralDistricts().getCode())
                     .append(district.getCode() == null ? "DIS" : district.getCode())
                     .append(324)
                     .append(paddedStringId);
@@ -544,8 +544,8 @@ public class UserService implements UserDetailsService {
                 + ConstCommittee.SCORE_USER_UNIVERSITY.get(user.getUniversity().intValue())
                 + ConstCommittee.SCORE_USER_REASON.get(user.getReasonSelectCommittee().intValue())
                 + ConstCommittee.SCORE_USER_REASON.get(user.getReasonSelectCommittee().intValue())
-                + user.getFacultyMembership() == 1L ? ConstCommittee.SCORE_USER_FACILITY_MEMBERSHIP : 0
-                + user.getEliteMembership() == 1L ? ConstCommittee.SCORE_USER_ELITE_MEMBERSHIP : 0
+                + user.getFacultyMembership() == 1 ? ConstCommittee.SCORE_USER_FACILITY_MEMBERSHIP : 0
+                + user.getEliteMembership() == 1 ? ConstCommittee.SCORE_USER_ELITE_MEMBERSHIP : 0
                 + ConstCommittee.SCORE_USER_GPA.get(user.getGpa())
                 + (user.getAuthoredBook() * ConstCommittee.SCORE_USER_PER_AUTHORED_BOOK)
                 + (user.getTranslatedBook() * ConstCommittee.SCORE_USER_PER_TRANSLATED_BOOK)

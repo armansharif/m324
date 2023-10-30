@@ -34,11 +34,14 @@ public class CommitteeController {
 
     @PostMapping(value = {Routes.POST_committee_request})
     public Map<String, String> postCommitteeRequest(HttpServletResponse response,
-                                                    @RequestParam Long userId,
+                                                    HttpServletRequest request,
+                                                //    @RequestParam Long userId,
                                                     @RequestParam Long committeeId,
+                                                    @RequestParam Long reasonSelectCommittee ,
                                                     @RequestParam(required = false) String description
     ) {
-        return committeeService.postCommitteeRequest(userId, committeeId, description);
+        Long user_id = userService.getUserIdByToken(request);
+        return committeeService.postCommitteeRequest(user_id, committeeId,reasonSelectCommittee , description);
     }
 
     @GetMapping(value = {Routes.GET_committee_requests})
@@ -72,5 +75,13 @@ public class CommitteeController {
 
         return committeeService.setCommitteeRequestAcceptReject(requestId, request,false);
     }
+    @PostMapping(value = {Routes.POST_committee_request_remove})
+    public Committee removeCommitteeRequest(HttpServletResponse response, HttpServletRequest request,
+                                               @RequestParam Long requestId
+    ) {
+
+        return committeeService.removeCommitteeRequest(requestId, request );
+    }
+
 
 }

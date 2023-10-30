@@ -219,7 +219,7 @@ public class UserController {
                 res.put("code", response.getStatus());
                 res.put("token", "");
                 res.put("status", "fail");
-                res.put("message", " کد ستاد اجباری می باشد");
+                res.put("message", " کد معرف اجباری می باشد");
                 return ResponseEntity.badRequest().body(res.toString());
             }
             refUser = userService.findUserByRefCode(ref);
@@ -596,7 +596,7 @@ public class UserController {
             @RequestParam(required = false) Long education,
             @RequestParam(required = false) Long districtId,
             @RequestParam(required = false) Long university,
-            @RequestParam(required = false) Long reasonSelectCommittee,
+            @RequestParam(required = false) Integer reasonSelectCommittee,
             @RequestParam(required = false) Integer yearOfService,
             @RequestParam(required = false) Integer eliteMembership,
             @RequestParam(required = false) Integer gpa,

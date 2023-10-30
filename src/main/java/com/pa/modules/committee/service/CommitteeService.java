@@ -86,6 +86,7 @@ public class CommitteeService {
 
     public Map<String, String> postCommitteeRequest(Long userId,
                                                     Long committeeId,
+                                                    Long reasonId,
                                                     String description) {
         Map<String, String> res = new HashMap<>();
         Users user = userService.findUser(userId).orElse(null);
@@ -103,11 +104,17 @@ public class CommitteeService {
             throw new UserServiceException("can not Request on commission");
         }
 
-        MembershipRequest checkExistMembershipRequest = membershipRequestRepository.findByCommitteeAndUser(committee, user);
+
+        List<MembershipRequest> checkExistMembershipRequest = membershipRequestRepository.findNonAcceptedMembershipRequestByUser(user.getId());
+
+        //   MembershipRequest checkExistMembershipRequest = membershipRequestRepository.findByCommitteeAndUser(committee, user);
         description = " درخواست  کاربر  " + user.getName() + "  برای  عضویت در " + committee.getName() + " ثبت شده است.";
 
-        if (CommonUtils.isNotNull(checkExistMembershipRequest)) {
-            throw new UserServiceException(" این درخواست  قبلا برای این کاربر ثبت شده است");
+        if (checkExistMembershipRequest.size() > 0) {
+            if (checkExistMembershipRequest.get(0).getStatus() == ConstCommittee.COMMITTEE_STATUS_DRAFT)
+                throw new UserServiceException(" برای شما قبلا درخواست عضویت ثبت شده است، هر کاربر فقط در یک کمیته میتواند عضویت داشته باشد");
+            if (checkExistMembershipRequest.get(0).getStatus() == ConstCommittee.COMMITTEE_STATUS_ACCEPT)
+                throw new UserServiceException("  هر کاربر فقط در یک کمیته میتواند عضویت داشته باشد");
         } else {
             MembershipRequest membershipRequest = new MembershipRequest();
             membershipRequest.setUser(user);
@@ -119,6 +126,9 @@ public class CommitteeService {
         res.put("user", user.getName());
         res.put("committee", committee.getName());
         res.put("result", " درخواست عضویت با موفقیت ثبت شد");
+
+        user.setReasonSelectCommittee(reasonId.intValue());
+        usersRepository.save(user);
 
         Set<Users> adminOfCommission = committee.getParent().getUsers();
         Iterator<Users> adminOfCommissionIterator = adminOfCommission.iterator();
@@ -150,9 +160,12 @@ public class CommitteeService {
             if (membershipRequest.getUser().getId() == user.getId()) {
                 membershipRequest.setIsAcceptable(0);
                 membershipRequest.setIsRejectable(0);
-            } else {
+            } else if (membershipRequest.getStatus() == ConstCommittee.COMMITTEE_STATUS_DRAFT) {
                 membershipRequest.setIsAcceptable(1);
                 membershipRequest.setIsRejectable(1);
+            } else {
+                membershipRequest.setIsAcceptable(0);
+                membershipRequest.setIsRejectable(0);
             }
             result.add(membershipRequest);
         }
@@ -216,6 +229,46 @@ public class CommitteeService {
             notification.setMessage("متاسفانه با درخواست عضویت شما در " + committee.getName() + " موافقت نشد.");
         }
         membershipRequestRepository.save(membershipRequest);
+        notificationRepository.save(notification);
+
+        return committee;
+    }
+
+    public Committee removeCommitteeRequest(Long requestId, HttpServletRequest request) {
+
+
+        MembershipRequest membershipRequest = findMembershipRequest(requestId).orElse(null);
+
+        if (membershipRequest == null) {
+            throw new UserServiceException("Request not found");
+        }
+
+        if (membershipRequest.getStatus() != ConstCommittee.COMMITTEE_STATUS_DRAFT) {
+            throw new UserServiceException(" فقط درخواست در وضعیت پیشنویس قابل حذف می باشد");
+        }
+
+        Users user = userService.findUser(membershipRequest.getUser().getId()).orElse(null);
+        if (user == null) {
+            throw new UserServiceException("User not found");
+        }
+        if (userService.getUserIdByToken(request) != user.getId()) {
+            throw new UserServiceException("فقط کاربر ثبت کننده درخواست مجاز به حذف آن  می باشد");
+        }
+
+        Committee committee = findCommittee(membershipRequest.getCommittee().getId()).orElse(null);
+        if (committee == null) {
+            throw new UserServiceException("committee not found");
+        }
+
+        membershipRequestRepository.delete(membershipRequest);
+
+
+        Notification notification = new Notification();
+        notification.setUsers(user);
+        notification.setReadOnly(1);
+        notification.setRoute("none");
+        notification.setMessage(" درخواست عضویت شما در " + committee.getName() + " با موفقیت حذف شد.");
+
         notificationRepository.save(notification);
 
         return committee;

@@ -6,7 +6,7 @@ import java.util.Map;
 
 public class ConstCommittee {
 
-    public static final String PERFIX_SETAD_REF = "REF_";  //پیش نویس
+    public static final String PERFIX_SETAD_REF = "M";  //پیش نویس
     public static final int COMMITTEE_STATUS_DRAFT = 0;  //پیش نویس
     public static final int COMMITTEE_STATUS_ACCEPT = 1; //تایید شده
 
