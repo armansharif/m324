@@ -31,6 +31,14 @@ public class Routes {
     public final static String POST_notification_read= "/notification/read/{id}";
 
     public final static String PUT_profile = "/profile";
+
+    public final static String GET_admin_tickets  = "/admin/tickets";
+    public final static String GET_tickets= "/tickets";
+    public final static String GET_tickets_add= "/tickets/add";
+    public final static String GET_tickets_close= "/tickets/close/{id}";
+    public final static String GET_tickets_response= "/tickets/response/{id}";
+
+
     //--------------------------------------------
     public final static String GET_users_admin = "/admin/users";
     public final static String GET_users_by_id = "/users/{id}";

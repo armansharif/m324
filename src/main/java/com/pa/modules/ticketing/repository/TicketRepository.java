@@ -2,6 +2,7 @@ package com.pa.modules.ticketing.repository;
 
 
 import com.pa.modules.ticketing.model.Ticket;
+import com.pa.modules.user.model.Users;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,6 +18,8 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     List<Ticket> findAllByStatus(int status, Pageable pageable);
 
     Long countAllByStatus(int status);
+
+    List<Ticket> findAllByUsers(Users users);
 
 
 }

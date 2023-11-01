@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,7 +47,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-
 public class UserService implements UserDetailsService {
 
     Logger logger = LoggerFactory.getLogger(UserService.class);
@@ -58,13 +58,15 @@ public class UserService implements UserDetailsService {
     private LocationService locationService;
     private Environment env;
 
+    private MessageSource messageSource;
     @Autowired
-    public UserService(UsersRepository usersRepository, ConvertEnFa convertEnFa, SmsVerification smsVerification, RolesRepository rolesRepository, LocationService locationService, Environment env) {
+    public UserService(UsersRepository usersRepository, ConvertEnFa convertEnFa, SmsVerification smsVerification, RolesRepository rolesRepository, LocationService locationService, Environment env, MessageSource messageSource) {
         this.usersRepository = usersRepository;
         this.smsVerification = smsVerification;
         this.rolesRepository = rolesRepository;
         this.locationService = locationService;
         this.env = env;
+        this.messageSource = messageSource;
     }
 
     @Value("${general.user.registrationOnFirstLogin.enable}")
@@ -534,7 +536,7 @@ public class UserService implements UserDetailsService {
         JwtUtils jwtUtils = new JwtUtils();
         Users user = findUser(getUserIdByToken(request)).orElse(null);
         if (user == null)
-            throw new UserServiceException("User not found");
+            throw new UserServiceException(messageSource.getMessage("user.notFound", null, Locale.getDefault()));
         return user;
     }
 

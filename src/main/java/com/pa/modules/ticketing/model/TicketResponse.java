@@ -2,12 +2,15 @@ package com.pa.modules.ticketing.model;
 
 import com.pa.modules.user.model.Users;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+
 
 @Entity
 @Data
@@ -31,10 +34,15 @@ public class TicketResponse {
     @Column(length = 512)
     private String text;
 
+    @JsonIgnore
     @ManyToOne
     Ticket ticket;
 
+    @JsonIncludeProperties(value = {"id","name","family"})
     @ManyToOne
     Users users;
 
+    public TicketResponse() {
+
+    }
 }

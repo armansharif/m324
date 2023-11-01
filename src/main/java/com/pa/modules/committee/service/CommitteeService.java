@@ -1,6 +1,5 @@
 package com.pa.modules.committee.service;
 
-import com.pa.commons.CommonUtils;
 import com.pa.commons.exception.UserServiceException;
 import com.pa.modules.committee.consts.ConstCommittee;
 import com.pa.modules.committee.model.Committee;
@@ -14,6 +13,7 @@ import com.pa.modules.user.model.Users;
 import com.pa.modules.user.repository.UsersRepository;
 import com.pa.modules.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,13 +33,16 @@ public class CommitteeService {
     private NotificationRepository notificationRepository;
     private MembershipRequestRepository membershipRequestRepository;
 
+    private MessageSource messageSource;
+
     @Autowired
-    public CommitteeService(CommitteeRepository committeeRepository, UserService userService, UsersRepository usersRepository, NotificationRepository notificationRepository, MembershipRequestRepository membershipRequestRepository) {
+    public CommitteeService(CommitteeRepository committeeRepository, UserService userService, UsersRepository usersRepository, NotificationRepository notificationRepository, MembershipRequestRepository membershipRequestRepository, MessageSource messageSource) {
         this.committeeRepository = committeeRepository;
         this.userService = userService;
         this.usersRepository = usersRepository;
         this.notificationRepository = notificationRepository;
         this.membershipRequestRepository = membershipRequestRepository;
+        this.messageSource = messageSource;
     }
 
     public List<Committee> findAllCommittee() {
@@ -91,17 +94,18 @@ public class CommitteeService {
         Map<String, String> res = new HashMap<>();
         Users user = userService.findUser(userId).orElse(null);
         if (user == null) {
-            throw new UserServiceException("User not found");
+            throw new UserServiceException(messageSource.getMessage("user.notFound", null, Locale.getDefault()));
         }
 
         Committee committee = committeeRepository.findById(committeeId).orElse(null);
 
         if (committee == null) {
-            throw new UserServiceException("Committee not found");
+
+            throw new UserServiceException(messageSource.getMessage("committee.notFound", null, Locale.getDefault()));
         }
 
         if (committee.getIsCommission() == 1) {
-            throw new UserServiceException("can not Request on commission");
+            throw new UserServiceException(messageSource.getMessage("committee.request.invalid", null, Locale.getDefault()));
         }
 
 
@@ -112,9 +116,9 @@ public class CommitteeService {
 
         if (checkExistMembershipRequest.size() > 0) {
             if (checkExistMembershipRequest.get(0).getStatus() == ConstCommittee.COMMITTEE_STATUS_DRAFT)
-                throw new UserServiceException(" برای شما قبلا درخواست عضویت ثبت شده است، هر کاربر فقط در یک کمیته میتواند عضویت داشته باشد");
+                throw new UserServiceException(messageSource.getMessage("committee.request.permitOne", null, Locale.getDefault()));
             if (checkExistMembershipRequest.get(0).getStatus() == ConstCommittee.COMMITTEE_STATUS_ACCEPT)
-                throw new UserServiceException("  هر کاربر فقط در یک کمیته میتواند عضویت داشته باشد");
+                throw new UserServiceException(messageSource.getMessage("committee.membership.permitOne", null, Locale.getDefault()));
         } else {
             MembershipRequest membershipRequest = new MembershipRequest();
             membershipRequest.setUser(user);
@@ -185,24 +189,24 @@ public class CommitteeService {
 
 
         if (membershipRequestRepository.getAllMembershipRequestForOwner(userService.getUserIdByToken(request)).isEmpty()) {
-            throw new UserServiceException("Invalid request ");
+            throw new UserServiceException(messageSource.getMessage("committee.request.invalid", null, Locale.getDefault()));
         }
 
         MembershipRequest membershipRequest = findMembershipRequest(requestId).orElse(null);
 
         if (membershipRequest == null) {
-            throw new UserServiceException("Request not found");
+            throw new UserServiceException(messageSource.getMessage("committee.request.notFound", null, Locale.getDefault()));
         }
 
 
         Users user = userService.findUser(membershipRequest.getUser().getId()).orElse(null);
         if (user == null) {
-            throw new UserServiceException("User not found");
+            throw new UserServiceException(messageSource.getMessage("user.notFound", null, Locale.getDefault()));
         }
 
         Committee committee = findCommittee(membershipRequest.getCommittee().getId()).orElse(null);
         if (user == null) {
-            throw new UserServiceException("committee not found");
+            throw new UserServiceException(messageSource.getMessage("committee.notFound", null, Locale.getDefault()));
         }
         committee.getUsers().add(user);
         committeeRepository.save(committee);
@@ -240,24 +244,24 @@ public class CommitteeService {
         MembershipRequest membershipRequest = findMembershipRequest(requestId).orElse(null);
 
         if (membershipRequest == null) {
-            throw new UserServiceException("Request not found");
+            throw new UserServiceException(messageSource.getMessage("committee.request.notFound", null, Locale.getDefault()));
         }
 
         if (membershipRequest.getStatus() != ConstCommittee.COMMITTEE_STATUS_DRAFT) {
-            throw new UserServiceException(" فقط درخواست در وضعیت پیشنویس قابل حذف می باشد");
+            throw new UserServiceException(messageSource.getMessage("committee.request.invalidStatusToDelete", null, Locale.getDefault()));
         }
 
         Users user = userService.findUser(membershipRequest.getUser().getId()).orElse(null);
         if (user == null) {
-            throw new UserServiceException("User not found");
+            throw new UserServiceException(messageSource.getMessage("user.notFound", null, Locale.getDefault()));
         }
         if (userService.getUserIdByToken(request) != user.getId()) {
-            throw new UserServiceException("فقط کاربر ثبت کننده درخواست مجاز به حذف آن  می باشد");
+            throw new UserServiceException(messageSource.getMessage("committee.request.ownerCanDelete", null, Locale.getDefault()));
         }
 
         Committee committee = findCommittee(membershipRequest.getCommittee().getId()).orElse(null);
         if (committee == null) {
-            throw new UserServiceException("committee not found");
+            throw new UserServiceException(messageSource.getMessage("committee.notFound", null, Locale.getDefault()));
         }
 
         membershipRequestRepository.delete(membershipRequest);
