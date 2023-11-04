@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@CrossOrigin
 @RequestMapping(produces = "application/json")
 public class CommitteeController {
     private CommitteeService committeeService;

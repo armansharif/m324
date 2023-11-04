@@ -18,6 +18,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 @RestController
+@CrossOrigin
 @RequestMapping(produces = "application/json")
 public class NewsController {
 

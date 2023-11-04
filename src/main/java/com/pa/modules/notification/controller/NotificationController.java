@@ -1,4 +1,4 @@
-package com.pa.modules.notification;
+package com.pa.modules.notification.controller;
 
 import com.pa.commons.Routes;
 import com.pa.modules.notification.model.Notification;
@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Optional;
 
 @RestController
+@CrossOrigin
 @RequestMapping(produces = "application/json")
 public class NotificationController {
     Logger logger = LoggerFactory.getLogger(UserController.class);
