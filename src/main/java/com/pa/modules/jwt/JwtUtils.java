@@ -5,14 +5,17 @@ import com.pa.modules.user.controller.UserController;
 import io.jsonwebtoken.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.Locale;
 
 @Service
 public class JwtUtils {
@@ -99,7 +102,8 @@ public class JwtUtils {
                 return null;
             }
         } else {
-            return null;
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,  "User Not Found");
+          //  return null;
         }
 
     }

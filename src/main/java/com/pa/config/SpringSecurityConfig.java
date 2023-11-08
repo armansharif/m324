@@ -52,12 +52,11 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
                         Routes.POST_admin_login,
                         Routes.POST_forget_pass_email,
                         Routes.POST_forget_pass_mobile,
-                        Routes.GET_news_post,
-                        Routes.GET_news_category,
-                        Routes.GET_location_city,
-                        Routes.GET_location_state
+                        "/news/**",
+                        "/location/**",
+                        "/upload/**",
+                        "/test/**"
                 ).permitAll()
-                .antMatchers("/upload/**", "/test/**").permitAll()//   "/dam/**"
                 .anyRequest().authenticated()
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and().addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
@@ -65,10 +64,10 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authenticationEntryPoint((request, response, e) ->
                 {
                     response.setContentType("application/json;charset=UTF-8");
-                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.getWriter().write(new JSONObject()
                             .put("status", "fail")
-                            .put("code", HttpServletResponse.SC_FORBIDDEN)
+                            .put("code", HttpServletResponse.SC_UNAUTHORIZED)
                             .put("message", "Your token has expired.")
                             .toString());
                 })

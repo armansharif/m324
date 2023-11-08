@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
+@ControllerAdvice
 @RestController
 @CrossOrigin
 @RequestMapping(produces = "application/json")

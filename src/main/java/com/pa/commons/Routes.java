@@ -43,19 +43,12 @@ public class Routes {
     public final static String GET_users_admin = "/admin/users";
     public final static String GET_users_by_id = "/users/{id}";
 
-
-
-
-
     public final static String POST_user_auth_email = "/auth/email";
 
     public final static String POST_forget_pass_email = "/forgetPass/email";
     public final static String POST_forget_pass_mobile = "/forgetPass/mobile";
 
     public final static String POST_user_verify_email = "/verify/email";
-
-
-
 
     public final static String POST_reset_pass_email = "/resetPass/mobile";
 

@@ -31,11 +31,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
@@ -536,7 +538,8 @@ public class UserService implements UserDetailsService {
         JwtUtils jwtUtils = new JwtUtils();
         Users user = findUser(getUserIdByToken(request)).orElse(null);
         if (user == null)
-            throw new UserServiceException(messageSource.getMessage("user.notFound", null, Locale.getDefault()));
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, messageSource.getMessage("user.notFound", null, Locale.getDefault()));
+           // throw new UserServiceException(messageSource.getMessage("user.notFound", null, Locale.getDefault()));
         return user;
     }
 
