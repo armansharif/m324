@@ -1,4 +1,4 @@
-package com.pa.commons.exception;
+package com.pa.commons.toDelete;
 
 
 public class UserServiceException extends RuntimeException{

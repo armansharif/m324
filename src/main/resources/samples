@@ -1,0 +1,2 @@
+userService.findUser(1212L).orElseThrow(() -> new ResponseStatusException( HttpStatus.NOT_FOUND, "arman"));
+--------------------------------

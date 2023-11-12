@@ -1,6 +1,6 @@
 package com.pa.modules.ticketing.service;
 
-import com.pa.commons.exception.UserServiceException;
+import com.pa.commons.toDelete.UserServiceException;
 import com.pa.modules.ticketing.consts.ConstTicketing;
 import com.pa.modules.ticketing.model.Ticket;
 import com.pa.modules.ticketing.model.TicketCategory;
@@ -16,7 +16,9 @@ import org.springframework.context.MessageSource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -88,7 +90,8 @@ public class TicketService {
         Ticket ticket = ticketRepository.findById(ticketId).orElseThrow(RuntimeException::new);
 
         if (ticket.getStatus() == ConstTicketing.TICKET_STATUS_CLOSED) {
-            throw new UserServiceException(messageSource.getMessage("ticket.closed",null,Locale.getDefault()));
+            //      throw new UserServiceException(messageSource.getMessage("ticket.closed",null,Locale.getDefault()));
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, messageSource.getMessage("ticket.closed", null, Locale.getDefault()));
         }
         // check user is admin Or user is ownerOf ticket
 

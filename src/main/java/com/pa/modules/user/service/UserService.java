@@ -3,7 +3,6 @@ package com.pa.modules.user.service;
 
 import com.google.common.collect.ImmutableMap;
 import com.pa.commons.CommonUtils;
-import com.pa.commons.exception.UserServiceException;
 import com.pa.enums.Authority;
 import com.pa.modules.committee.consts.ConstCommittee;
 import com.pa.modules.committee.model.MembersDTO;

@@ -6,8 +6,10 @@ import com.pa.modules.committee.service.CommitteeService;
 import com.pa.modules.user.model.Users;
 import com.pa.modules.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -36,13 +38,13 @@ public class CommitteeController {
     @PostMapping(value = {Routes.POST_committee_request})
     public Map<String, String> postCommitteeRequest(HttpServletResponse response,
                                                     HttpServletRequest request,
-                                                //    @RequestParam Long userId,
+                                                    //    @RequestParam Long userId,
                                                     @RequestParam Long committeeId,
-                                                    @RequestParam Long reasonSelectCommittee ,
+                                                    @RequestParam Long reasonSelectCommittee,
                                                     @RequestParam(required = false) String description
     ) {
         Long user_id = userService.getUserIdByToken(request);
-        return committeeService.postCommitteeRequest(user_id, committeeId,reasonSelectCommittee , description);
+        return committeeService.postCommitteeRequest(user_id, committeeId, reasonSelectCommittee, description);
     }
 
     @GetMapping(value = {Routes.GET_committee_requests})
@@ -66,7 +68,7 @@ public class CommitteeController {
                                                @RequestParam Long requestId
     ) {
 
-        return committeeService.setCommitteeRequestAcceptReject(requestId, request,true);
+        return committeeService.setCommitteeRequestAcceptReject(requestId, request, true);
     }
 
     @PostMapping(value = {Routes.POST_committee_request_reject})
@@ -74,14 +76,15 @@ public class CommitteeController {
                                                @RequestParam Long requestId
     ) {
 
-        return committeeService.setCommitteeRequestAcceptReject(requestId, request,false);
+        return committeeService.setCommitteeRequestAcceptReject(requestId, request, false);
     }
+
     @PostMapping(value = {Routes.POST_committee_request_remove})
     public Committee removeCommitteeRequest(HttpServletResponse response, HttpServletRequest request,
-                                               @RequestParam Long requestId
+                                            @RequestParam Long requestId
     ) {
 
-        return committeeService.removeCommitteeRequest(requestId, request );
+        return committeeService.removeCommitteeRequest(requestId, request);
     }
 
 

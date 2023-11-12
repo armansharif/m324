@@ -1,4 +1,4 @@
-package com.pa.commons;
+package com.pa.commons.toDelete;
 
 import org.springframework.http.HttpStatus;
 public interface ExceptionType {

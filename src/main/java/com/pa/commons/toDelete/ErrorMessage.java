@@ -1,4 +1,4 @@
-package com.pa.commons.exception;
+package com.pa.commons.toDelete;
 import java.util.Date;
 
 public class ErrorMessage {
