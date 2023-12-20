@@ -40,21 +40,20 @@ public class JwtFilter extends OncePerRequestFilter {
         try {
             String pathInfo = request.getRequestURI();
             if (pathInfo.indexOf("auth") > 0 ||
-                    pathInfo.indexOf("verify") > 0
-                    //||
-//                    pathInfo.contains(Routes.POST_user_verify_email) ||
-//                    pathInfo.contains(Routes.POST_user_verify_mobile) ||
-//                    pathInfo.contains(Routes.POST_user_auth_email) ||
-//                    pathInfo.contains(Routes.POST_user_auth_mobile) ||
-//                    pathInfo.contains(Routes.POST_login) ||
-//                    pathInfo.contains(Routes.POST_reset_pass_email) ||
-//                    pathInfo.contains(Routes.POST_reset_pass_mobile) ||
-//                    pathInfo.contains(Routes.POST_admin_login) ||
-//                    pathInfo.contains(Routes.POST_forget_pass_email) ||
-//                    pathInfo.contains(Routes.POST_forget_pass_mobile) ||
-//                    pathInfo.contains(Routes.GET_news_post) ||
-//                    pathInfo.contains("/location")
-                   ) {
+                    pathInfo.indexOf("verify") > 0 ||
+                    pathInfo.contains(Routes.POST_user_verify_email) ||
+                    pathInfo.contains(Routes.POST_user_verify_mobile) ||
+                    pathInfo.contains(Routes.POST_user_auth_email) ||
+                    pathInfo.contains(Routes.POST_user_auth_mobile) ||
+                    pathInfo.contains(Routes.POST_login) ||
+                    pathInfo.contains(Routes.POST_reset_pass_email) ||
+                    pathInfo.contains(Routes.POST_reset_pass_mobile) ||
+                    pathInfo.contains(Routes.POST_admin_login) ||
+                    pathInfo.contains(Routes.POST_forget_pass_email) ||
+                    pathInfo.contains(Routes.POST_forget_pass_mobile) ||
+                    pathInfo.contains(Routes.GET_news_post) ||
+                    pathInfo.contains("/location")
+            ) {
                 //do nothing
             } else if (StringUtils.hasText(jwt) && jwtUtils.validateToken(jwt)) {
                 if (jwt.startsWith(new JwtUtils().TOKEN_PREFIX)) {

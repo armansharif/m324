@@ -106,6 +106,8 @@ public class Committee {
             MembersDTO member = new MembersDTO();
             if (u.getName() != null)
                 member.setFullName(u.getName());
+            if (!u.getRoles().isEmpty())
+                member.setRoleName(u.getRoles().iterator().next().getName());
             member.setUserId(u.getId());
             members.add(member);
         }

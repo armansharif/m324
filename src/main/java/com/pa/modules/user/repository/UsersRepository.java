@@ -17,6 +17,8 @@ import java.util.Set;
 public interface UsersRepository extends JpaRepository<Users, Long> {
 
     Users findByEmail(String email);
+    @Query(nativeQuery = true, value = "select * from users where ref_user_id is not null ")
+    List<Users> findAllUsersHasRef( );
 
     Users findByMobile(String mobile);
 
@@ -48,5 +50,14 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
     Page<Users> findAll(Specification<Users> postSpec , Pageable pageable );
     Page<Users> findAllByUserType(int userType , Pageable pageable );
 
+    @Query(nativeQuery = true, value = "select count(1) from users where ref_user_id =:userId ")
+    Long countOfRefUsed(@Param("userId") Long userId);
+
+    @Query(nativeQuery = true, value = " SELECT COUNT(1) FROM committee_membership cm , users u ,committee c " +
+            "   WHERE u.id = cm.user_id " +
+            "    AND  c.id = cm.committee_id " +
+          //  "    AND c.is_commission=1 " +
+            "    AND u.id = :userId ")
+    int isAdminOfCommittee(@Param("userId") Long userId);
 
     }

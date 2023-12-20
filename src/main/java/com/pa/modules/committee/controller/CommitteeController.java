@@ -1,5 +1,6 @@
 package com.pa.modules.committee.controller;
 
+import com.pa.commons.CommonUtils;
 import com.pa.commons.Routes;
 import com.pa.modules.committee.model.Committee;
 import com.pa.modules.committee.service.CommitteeService;
@@ -38,12 +39,16 @@ public class CommitteeController {
     @PostMapping(value = {Routes.POST_committee_request})
     public Map<String, String> postCommitteeRequest(HttpServletResponse response,
                                                     HttpServletRequest request,
-                                                    //    @RequestParam Long userId,
+                                                    @RequestParam(required = false) Long userId,
                                                     @RequestParam Long committeeId,
                                                     @RequestParam Long reasonSelectCommittee,
                                                     @RequestParam(required = false) String description
     ) {
-        Long user_id = userService.getUserIdByToken(request);
+        Long user_id = 0l;
+        if (CommonUtils.isNull(userId))
+            user_id = userService.getUserIdByToken(request);
+        else
+            user_id = userId;
         return committeeService.postCommitteeRequest(user_id, committeeId, reasonSelectCommittee, description);
     }
 

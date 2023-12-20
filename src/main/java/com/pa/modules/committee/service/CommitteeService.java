@@ -9,6 +9,7 @@ import com.pa.modules.committee.repository.CommitteeRepository;
 import com.pa.modules.committee.repository.MembershipRequestRepository;
 import com.pa.modules.notification.repository.NotificationRepository;
 import com.pa.modules.notification.model.Notification;
+import com.pa.modules.user.model.Roles;
 import com.pa.modules.user.model.Users;
 import com.pa.modules.user.repository.UsersRepository;
 import com.pa.modules.user.service.UserService;
@@ -56,6 +57,8 @@ public class CommitteeService {
                 MembersDTO member = new MembersDTO();
                 if (u.getName() != null)
                     member.setFullName(u.getName());
+                if (!u.getRoles().isEmpty())
+                    member.setRoleName(u.getRoles().iterator().next().getName());
                 member.setUserId(u.getId());
                 members.add(member);
             }
@@ -77,6 +80,8 @@ public class CommitteeService {
                     MembersDTO member = new MembersDTO();
                     if (u.getName() != null)
                         member.setFullName(u.getName());
+                    if (!u.getRoles().isEmpty())
+                        member.setRoleName(u.getRoles().iterator().next().getName());
                     member.setUserId(u.getId());
                     members.add(member);
                 }
@@ -96,20 +101,17 @@ public class CommitteeService {
         Map<String, String> res = new HashMap<>();
         Users user = userService.findUser(userId).orElse(null);
         if (user == null) {
-            // throw new UserServiceException(messageSource.getMessage("user.notFound", null, Locale.getDefault()));
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, messageSource.getMessage("user.notFound", null, Locale.getDefault()));
         }
 
         Committee committee = committeeRepository.findById(committeeId).orElse(null);
 
         if (committee == null) {
-            // throw new UserServiceException(messageSource.getMessage("committee.notFound", null, Locale.getDefault()));
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, messageSource.getMessage("committee.notFound", null, Locale.getDefault()));
         }
 
         if (committee.getIsCommission() == 1) {
-            // throw new UserServiceException(messageSource.getMessage("committee.request.invalid", null, Locale.getDefault()));
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, messageSource.getMessage("committee.request.invalid", null, Locale.getDefault()));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, messageSource.getMessage("committee.request.invalid", null, Locale.getDefault()));
 
         }
 
@@ -122,10 +124,10 @@ public class CommitteeService {
         if (checkExistMembershipRequest.size() > 0) {
             if (checkExistMembershipRequest.get(0).getStatus() == ConstCommittee.COMMITTEE_STATUS_DRAFT)
                 //  throw new UserServiceException(messageSource.getMessage("committee.request.permitOne", null, Locale.getDefault()));
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, messageSource.getMessage("committee.request.permitOne", null, Locale.getDefault()));
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, messageSource.getMessage("committee.request.permitOne", null, Locale.getDefault()));
             if (checkExistMembershipRequest.get(0).getStatus() == ConstCommittee.COMMITTEE_STATUS_ACCEPT)
                 //    throw new UserServiceException(messageSource.getMessage("committee.membership.permitOne", null, Locale.getDefault()));
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, messageSource.getMessage("ommittee.membership.permitOne", null, Locale.getDefault()));
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, messageSource.getMessage("ommittee.membership.permitOne", null, Locale.getDefault()));
 
         } else {
             MembershipRequest membershipRequest = new MembershipRequest();
@@ -195,33 +197,26 @@ public class CommitteeService {
 
     public Committee setCommitteeRequestAcceptReject(Long requestId, HttpServletRequest request, boolean isAccept) {
 
-
+        // چک کردن کمیته :   لیست مدیران کمیته مد نظر
         if (membershipRequestRepository.getAllMembershipRequestForOwner(userService.getUserIdByToken(request)).isEmpty()) {
-        //    throw new UserServiceException(messageSource.getMessage("committee.request.invalid", null, Locale.getDefault()));
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, messageSource.getMessage("committee.request.invalid", null, Locale.getDefault()));
-
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, messageSource.getMessage("committee.request.invalid", null, Locale.getDefault()));
         }
 
         MembershipRequest membershipRequest = findMembershipRequest(requestId).orElse(null);
 
         if (membershipRequest == null) {
-          //  throw new UserServiceException(messageSource.getMessage("committee.request.notFound", null, Locale.getDefault()));
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, messageSource.getMessage("committee.request.notFound", null, Locale.getDefault()));
         }
 
 
         Users user = userService.findUser(membershipRequest.getUser().getId()).orElse(null);
         if (user == null) {
-       //     throw new UserServiceException(messageSource.getMessage("user.notFound", null, Locale.getDefault()));
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, messageSource.getMessage("user.notFound", null, Locale.getDefault()));
-
         }
 
         Committee committee = findCommittee(membershipRequest.getCommittee().getId()).orElse(null);
         if (committee == null) {
-        //    throw new UserServiceException(messageSource.getMessage("committee.notFound", null, Locale.getDefault()));
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, messageSource.getMessage("committee.notFound", null, Locale.getDefault()));
-
         }
         committee.getUsers().add(user);
         committeeRepository.save(committee);
@@ -250,6 +245,13 @@ public class CommitteeService {
         membershipRequestRepository.save(membershipRequest);
         notificationRepository.save(notification);
 
+        Roles memberRole = new Roles();
+        memberRole.setId(ConstCommittee.USERS_MEMBER_ROLE_ID);
+        Set<Roles> setRoles = new HashSet<>();
+        setRoles.add(memberRole);
+        user.setRoles(setRoles);
+        usersRepository.save(user);
+
         return committee;
     }
 
@@ -259,32 +261,32 @@ public class CommitteeService {
         MembershipRequest membershipRequest = findMembershipRequest(requestId).orElse(null);
 
         if (membershipRequest == null) {
-      //      throw new UserServiceException(messageSource.getMessage("committee.request.notFound", null, Locale.getDefault()));
+            //      throw new UserServiceException(messageSource.getMessage("committee.request.notFound", null, Locale.getDefault()));
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, messageSource.getMessage("committee.request.notFound", null, Locale.getDefault()));
 
         }
 
         if (membershipRequest.getStatus() != ConstCommittee.COMMITTEE_STATUS_DRAFT) {
-        //    throw new UserServiceException(messageSource.getMessage("committee.request.invalidStatusToDelete", null, Locale.getDefault()));
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, messageSource.getMessage("committee.request.invalidStatusToDelete", null, Locale.getDefault()));
+            //    throw new UserServiceException(messageSource.getMessage("committee.request.invalidStatusToDelete", null, Locale.getDefault()));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, messageSource.getMessage("committee.request.invalidStatusToDelete", null, Locale.getDefault()));
 
         }
 
         Users user = userService.findUser(membershipRequest.getUser().getId()).orElse(null);
         if (user == null) {
-     //       throw new UserServiceException(messageSource.getMessage("user.notFound", null, Locale.getDefault()));
+            //       throw new UserServiceException(messageSource.getMessage("user.notFound", null, Locale.getDefault()));
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, messageSource.getMessage("user.notFound", null, Locale.getDefault()));
 
         }
         if (userService.getUserIdByToken(request) != user.getId()) {
-        //    throw new UserServiceException(messageSource.getMessage("committee.request.ownerCanDelete", null, Locale.getDefault()));
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, messageSource.getMessage("committee.request.ownerCanDelete", null, Locale.getDefault()));
+            //    throw new UserServiceException(messageSource.getMessage("committee.request.ownerCanDelete", null, Locale.getDefault()));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, messageSource.getMessage("committee.request.ownerCanDelete", null, Locale.getDefault()));
 
         }
 
         Committee committee = findCommittee(membershipRequest.getCommittee().getId()).orElse(null);
         if (committee == null) {
-           // throw new UserServiceException(messageSource.getMessage("committee.notFound", null, Locale.getDefault()));
+            // throw new UserServiceException(messageSource.getMessage("committee.notFound", null, Locale.getDefault()));
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, messageSource.getMessage("committee.notFound", null, Locale.getDefault()));
         }
 

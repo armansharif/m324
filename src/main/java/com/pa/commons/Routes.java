@@ -37,7 +37,7 @@ public class Routes {
     public final static String GET_tickets_add= "/tickets/add";
     public final static String GET_tickets_close= "/tickets/close/{id}";
     public final static String GET_tickets_response= "/tickets/response/{id}";
-
+    public final static String GET_users = "/users";
 
     //--------------------------------------------
     public final static String GET_users_admin = "/admin/users";

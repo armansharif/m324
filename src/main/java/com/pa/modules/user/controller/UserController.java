@@ -12,11 +12,11 @@ import net.kaczmarzyk.spring.data.jpa.domain.Like;
 import net.kaczmarzyk.spring.data.jpa.web.annotation.And;
 import net.kaczmarzyk.spring.data.jpa.web.annotation.Spec;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.sisu.Hidden;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -27,12 +27,14 @@ import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import springfox.documentation.annotations.ApiIgnore;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @RestController
@@ -46,14 +48,15 @@ public class UserController {
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final UserService userService;
-
+private MessageSource messageSource;
 
     @Autowired
-    public UserController(UserService userService, AuthenticationManager authenticationManager, JwtUtils jwtUtils, AddressesService addressesService) {
+    public UserController(UserService userService, AuthenticationManager authenticationManager, JwtUtils jwtUtils, AddressesService addressesService, MessageSource messageSource) {
         this.userService = userService;
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
         this.addressesService = addressesService;
+        this.messageSource = messageSource;
     }
 
 
@@ -86,40 +89,62 @@ public class UserController {
         mobile = jwtUtils.arabicToDecimal(mobile);
 
         Users user = userService.findUserByMobile(mobile);
+    //    Users refUser= userService.preCheckRefUser(user, ref);
+
+//to delete
         JSONObject res = new JSONObject();
         if (user == null) {
-            logger.info(" verification failed");
-            res = new JSONObject();
-            res.put("code", response.getStatus());
-            res.put("token", "");
-            res.put("status", "fail");
-            res.put("message", "User not found");
-            return ResponseEntity.badRequest().body(res.toString());
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, messageSource.getMessage("user.notFound", null, Locale.getDefault()));
         }
         Users refUser = null;
         if (CommonUtils.isNull(user.getRefUser())) {
             if (ref == null || ref.isEmpty()) {
-                res = new JSONObject();
+               // throw new ResponseStatusException(HttpStatus.BAD_REQUEST, messageSource.getMessage("user.mandatory.refCode", null, Locale.getDefault()));
+
                 res.put("code", response.getStatus());
                 res.put("token", "");
                 res.put("status", "fail");
-                res.put("message", " کد معرف اجباری می باشد");
+                res.put("message",messageSource.getMessage("user.mandatory.refCode", null, Locale.getDefault()));
                 return ResponseEntity.badRequest().body(res.toString());
             }
             refUser = userService.findUserByRefCode(ref);
 
             if (refUser == null) {
                 logger.info(" verification failed");
-                res = new JSONObject();
+               // throw new ResponseStatusException(HttpStatus.BAD_REQUEST, messageSource.getMessage("user.invalid.refCode", null, Locale.getDefault()));
                 res.put("code", response.getStatus());
                 res.put("token", "");
                 res.put("status", "fail");
-                res.put("message", " کد معرف معتبر نمی باشد");
+                res.put("message",messageSource.getMessage("user.invalid.refCode", null, Locale.getDefault()));
                 return ResponseEntity.badRequest().body(res.toString());
             }
+
+            Long refUsed = userService.countOfRefUsed(refUser.getId());
+
+            if (userService.isAdminOfCommittee(refUser.getId())>0) {
+                if (refUsed >= ConstCommittee.COMMITTEE_ALLOWED_NUMBER_OF_REF_USED_ADMIN) {
+                  //  throw new ResponseStatusException(HttpStatus.BAD_REQUEST, messageSource.getMessage("user.invalid.allowedNumberRefUsed", null, Locale.getDefault()));
+                    res.put("code", response.getStatus());
+                    res.put("token", "");
+                    res.put("status", "fail");
+                    res.put("message",messageSource.getMessage("user.invalid.allowedNumberRefUsed", null, Locale.getDefault()));
+                    return ResponseEntity.badRequest().body(res.toString());
+                }
+            } else {
+                if (refUsed >= ConstCommittee.COMMITTEE_ALLOWED_NUMBER_OF_REF_USED_OTHER) {
+                    //throw new ResponseStatusException(HttpStatus.BAD_REQUEST, messageSource.getMessage("user.invalid.allowedNumberRefUsed", null, Locale.getDefault()));
+                    res.put("code", response.getStatus());
+                    res.put("token", "");
+                    res.put("status", "fail");
+                    res.put("message",messageSource.getMessage("user.invalid.allowedNumberRefUsed", null, Locale.getDefault()));
+                    return ResponseEntity.badRequest().body(res.toString());
+                }
+            }
+
         }
 
 
+        //
         String refCode = null;
 
         if (CommonUtils.isNull(user.getRefCode()))
@@ -207,7 +232,6 @@ public class UserController {
         if (user != null) {
 
             user.setPresentedUsers(userService.findPresentedUsers(user));
-
             return ResponseEntity.ok()
                     .body(user);
         } else {
@@ -375,26 +399,12 @@ public class UserController {
         return ResponseEntity.ok()
                 .body(successfulLogin.toString());
     }
-
+    @GetMapping(value = {Routes.GET_users})
+    public List<Users> getAllUsers(){
+        return userService.findAllUsers();
+    }
 
     //-------------------NOT USED -----------------------------
-    @GetMapping(value = {Routes.GET_users_admin})
-    @PreAuthorize("hasAuthority('OP_ACCESS_USER')")
-    @ApiIgnore
-    public List<Users> getAllUsers(
-            @And({
-                    @Spec(path = "mobile", spec = Like.class),
-                    @Spec(path = "family", spec = Like.class),
-                    @Spec(path = "email", spec = Like.class),
-                    @Spec(path = "name", spec = Like.class)
-            }) Specification<Users> userSpec,
-            @RequestParam(required = false, defaultValue = "id") String sort,
-            @RequestParam(required = false, defaultValue = "0") int page,
-            @RequestParam(required = false, defaultValue = "10") int perPage,
-            HttpServletResponse response) {
-        logger.info("try to get user list.");
-        return userService.findAllUsers(page, perPage, sort, userSpec);
-    }
 
 
     @GetMapping(value = {Routes.GET_users_by_id})
@@ -740,8 +750,8 @@ public class UserController {
             } else {
                 return new ResponseEntity<>(
                         JsonResponseBodyTemplate.
-                                createResponseJson("fail", HttpStatus.FORBIDDEN.value(), "The user is not valid").toString(),
-                        HttpStatus.FORBIDDEN);
+                                createResponseJson("fail", HttpStatus.BAD_REQUEST.value(), "The user is not valid").toString(),
+                        HttpStatus.BAD_REQUEST);
             }
         } catch (Exception e) {
             return new ResponseEntity<>(

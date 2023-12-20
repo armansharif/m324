@@ -60,6 +60,7 @@ public class UserService implements UserDetailsService {
     private Environment env;
 
     private MessageSource messageSource;
+
     @Autowired
     public UserService(UsersRepository usersRepository, ConvertEnFa convertEnFa, SmsVerification smsVerification, RolesRepository rolesRepository, LocationService locationService, Environment env, MessageSource messageSource) {
         this.usersRepository = usersRepository;
@@ -74,10 +75,42 @@ public class UserService implements UserDetailsService {
     private boolean registrationOnFirstLogin;
 
 
-//    public String generateCode(Users users) {
+    //    public String generateCode(Users users) {
 //        return "code";
 //        //   return "code" + users.getMobile().substring((users.getMobile().length() - 4), users.getMobile().length());
 //    }
+    public Users preCheckRefUser(Users user, String ref) {
+
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, messageSource.getMessage("user.notFound", null, Locale.getDefault()));
+        }
+        Users refUser = null;
+        if (CommonUtils.isNull(user.getRefUser())) {
+            if (ref == null || ref.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, messageSource.getMessage("user.mandatory.refCode", null, Locale.getDefault()));
+            }
+            refUser = findUserByRefCode(ref);
+
+            if (refUser == null) {
+                logger.info(" verification failed");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, messageSource.getMessage("user.invalid.refCode", null, Locale.getDefault()));
+            }
+
+            Long refUsed = countOfRefUsed(refUser.getId());
+
+            if (isAdminOfCommittee(refUser.getId()) > 0) {
+                if (refUsed >= ConstCommittee.COMMITTEE_ALLOWED_NUMBER_OF_REF_USED_ADMIN) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, messageSource.getMessage("user.invalid.allowedNumberRefUsed", null, Locale.getDefault()));
+                }
+            } else {
+                if (refUsed >= ConstCommittee.COMMITTEE_ALLOWED_NUMBER_OF_REF_USED_OTHER) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, messageSource.getMessage("user.invalid.allowedNumberRefUsed", null, Locale.getDefault()));
+                }
+            }
+
+        }
+        return refUser;
+    }
 
     public String verificationUser(String mobile) {
         env.getProperty("conf.urlUserImage");
@@ -88,10 +121,7 @@ public class UserService implements UserDetailsService {
         try {
             String smsCode = smsVerification.generateCode() + "";
             Users user = usersRepository.findByMobile(mobile);
-            if (user != null) {
-                user.setPassword(smsCode);
-                this.usersRepository.save(user);
-
+            if (user != null && CommonUtils.isNotNull(user.getRefUser()) ) {  //&& CommonUtils.isNotNull(user.getDistrict())
                 if (user.getRoles()
                         .stream()
                         .filter(r -> r.getAuthorities().contains(Authority.IS_ADMIN))
@@ -102,14 +132,14 @@ public class UserService implements UserDetailsService {
                     statusUserStr = "مدیر پیش از این در سامانه ثبت نام شده است";
                     statusUser = 2;
                 }
-            } else if (registrationOnFirstLogin) {
+            } else if (user == null && registrationOnFirstLogin) {
                 Set<Roles> roles = new HashSet<>();
                 roles.add(rolesRepository.findRolesByName("user"));
                 user = new Users(mobile, smsCode, roles);
-             //   user.setHeadCode(generateCode(user));
+                //   user.setHeadCode(generateCode(user));
                 //register new user
                 this.usersRepository.save(user);
-            } else {
+            } else if(user == null) {
                 JSONObject resJson = new JSONObject();
                 resJson.put("code", 200);
                 resJson.put("status", "fail");
@@ -117,6 +147,8 @@ public class UserService implements UserDetailsService {
                 return resJson.toString();
             }
             if (user != null) {
+                user.setPassword(smsCode);
+                this.usersRepository.save(user);
                 //  response = smsVerification.sendSmsVerificationGhasedak(mobile, smsCode);
                 JSONObject r = smsVerification.sendSmsVerificationSMSIR(mobile, smsCode);
                 r.put("userStatue", statusUser);
@@ -138,12 +170,11 @@ public class UserService implements UserDetailsService {
             if (user != null) {
                 user.setPassword(idOfCM);
                 this.usersRepository.save(user);
-
             } else {
                 Set<Roles> roles = new HashSet<>();
                 roles.add(rolesRepository.findRolesByName("user"));
                 user = new Users(mobile, idOfCM, roles);
-             //   user.setHeadCode(generateCode(user));
+                //   user.setHeadCode(generateCode(user));
                 user.setEmail(UUID.randomUUID().toString());
                 //register new user
                 this.usersRepository.save(user);
@@ -175,7 +206,7 @@ public class UserService implements UserDetailsService {
                 Set<Roles> roles = new HashSet<>();
                 roles.add(rolesRepository.findRolesByName("user"));
                 user = new Users("", email, smsCode, roles);
-           //     user.setHeadCode(generateCode(user));
+                //     user.setHeadCode(generateCode(user));
                 user.setMobile(UUID.randomUUID().toString());
                 //register new user
                 this.usersRepository.save(user);
@@ -203,7 +234,7 @@ public class UserService implements UserDetailsService {
             Files.write(Paths.get(path + File.separator + fileName), bytes);
             users.setImg(urlPostImageString + fileName);
         }
-       // users.setHeadCode(generateCode(users));
+        // users.setHeadCode(generateCode(users));
         return this.usersRepository.save(users);
     }
 
@@ -401,6 +432,10 @@ public class UserService implements UserDetailsService {
         String paddedStringId = generateAutoIncremantString(users.getId(), 5);
         StringBuffer code = new StringBuffer();
 
+        if (districtId == null && CommonUtils.isNull(users.getDistrict())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, messageSource.getMessage("user.mandatory.district", null, Locale.getDefault()));
+        }
+
         districtId = districtId == null ? users.getDistrict().getId() : districtId;
 
         District district = null;
@@ -416,7 +451,7 @@ public class UserService implements UserDetailsService {
             district = locationService.findDistrictById(districtId);
             code.append(educationToCharMap.get(edu.intValue()))
                     .append(educationToCharMap.get(uni.intValue()))
-                    .append(( district.getCity().getState() == null || district.getCity().getState().getCode()== null) ? "STT" : district.getCity().getState().getCode())
+                    .append((district.getCity().getState() == null || district.getCity().getState().getCode() == null) ? "STT" : district.getCity().getState().getCode())
                     .append(district.getElectoralDistricts() == null ? "ELE" : district.getElectoralDistricts().getCode())
                     .append(district.getCode() == null ? "DIS" : district.getCode())
                     .append(324)
@@ -430,6 +465,11 @@ public class UserService implements UserDetailsService {
     public List<Users> findAllUsers() {
         return this.usersRepository.findAll();
     }
+
+    public List<Users> findAllUsersHasRef( ) {
+        return this.usersRepository.findAllUsersHasRef( );
+    }
+
 
     public List<Users> findAllUsers(int page, int perPage, String sort, Specification<Users> userSpec) {
         Pageable postSortedAndPagination =
@@ -459,6 +499,18 @@ public class UserService implements UserDetailsService {
         return this.usersRepository.findByRefCode(refCode);
     }
 
+    public Long countOfRefUsed(Long userId) {
+        return this.usersRepository.countOfRefUsed(userId);
+    }
+
+    public int isAdminOfCommittee(Long userId) {
+        return this.usersRepository.isAdminOfCommittee(userId);
+    }
+
+    public Set<Users> findChildUsers (Users user){
+        return this.usersRepository.findAllByRefUser(user);
+    }
+
     public Set<MembersDTO> findPresentedUsers(Users user) {
         Set<MembersDTO> presentedUser = new HashSet<>();
         Set<Users> presentedUsers = this.usersRepository.findAllByRefUser(user);
@@ -466,6 +518,8 @@ public class UserService implements UserDetailsService {
             MembersDTO member = new MembersDTO();
             if (u.getName() != null)
                 member.setFullName(u.getName());
+            if (!u.getRoles().isEmpty())
+                member.setRoleName(u.getRoles().iterator().next().getName());
             member.setUserId(u.getId());
             presentedUser.add(member);
         }
@@ -538,7 +592,7 @@ public class UserService implements UserDetailsService {
         Users user = findUser(getUserIdByToken(request)).orElse(null);
         if (user == null)
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, messageSource.getMessage("user.notFound", null, Locale.getDefault()));
-           // throw new UserServiceException(messageSource.getMessage("user.notFound", null, Locale.getDefault()));
+        // throw new UserServiceException(messageSource.getMessage("user.notFound", null, Locale.getDefault()));
         return user;
     }
 

@@ -7,4 +7,5 @@ public class MembersDTO {
 
     Long userId;
     String fullName;
+    String roleName;
 }

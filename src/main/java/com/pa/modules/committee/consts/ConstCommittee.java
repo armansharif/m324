@@ -6,11 +6,16 @@ import java.util.Map;
 
 public class ConstCommittee {
 
+    public static final long USERS_MEMBER_ROLE_ID = 5;  //پیش نویس
     public static final String PERFIX_SETAD_REF = "M";  //پیش نویس
     public static final int COMMITTEE_STATUS_DRAFT = 0;  //پیش نویس
     public static final int COMMITTEE_STATUS_ACCEPT = 1; //تایید شده
 
     public static final int COMMITTEE_STATUS_REJECT = 2; //رد شده
+
+    public static final int COMMITTEE_ALLOWED_NUMBER_OF_REF_USED_ADMIN = 3;  //پیش نویس
+    public static final int COMMITTEE_ALLOWED_NUMBER_OF_REF_USED_OTHER= 2;  //پیش نویس
+
 
     public static final int USER_EDUCATION_PHD =4;
     public static final int USER_EDUCATION_MASTER =3;

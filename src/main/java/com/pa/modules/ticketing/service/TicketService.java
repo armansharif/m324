@@ -91,7 +91,7 @@ public class TicketService {
 
         if (ticket.getStatus() == ConstTicketing.TICKET_STATUS_CLOSED) {
             //      throw new UserServiceException(messageSource.getMessage("ticket.closed",null,Locale.getDefault()));
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, messageSource.getMessage("ticket.closed", null, Locale.getDefault()));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, messageSource.getMessage("ticket.closed", null, Locale.getDefault()));
         }
         // check user is admin Or user is ownerOf ticket
 

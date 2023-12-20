@@ -52,6 +52,8 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
                         Routes.POST_admin_login,
                         Routes.POST_forget_pass_email,
                         Routes.POST_forget_pass_mobile,
+                        Routes.GET_users_admin,
+                        "/users/**",
                         "/news/**",
                         "/location/**",
                         "/upload/**",
