@@ -43,7 +43,7 @@ public class NewsService {
     public List<Post> findAllPost(HttpServletRequest request, int page, int perPage, String sort) {
 
         Pageable postSortedAndPagination =
-                PageRequest.of(page, perPage, Sort.by(sort).ascending());
+                PageRequest.of(page, perPage, Sort.by(sort).descending());
         Page<Post> pagedResult = this.postRepository.findAll(postSortedAndPagination);
         if (pagedResult.hasContent()) {
             List<Post> posts = pagedResult.getContent();

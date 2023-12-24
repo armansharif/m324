@@ -169,20 +169,32 @@ public class SmsVerification {
             // print result
             System.out.println(responseStr.toString());
             JSONObject res = new JSONObject(responseStr.toString());
+//{"VerificationCodeId":-1.0,"IsSuccessful":false,"Message":"عملیات مورد نظر مجاز نمیباشد.مانده حساب مشترک کافی نمیباشد"}
+            try {
+                boolean IsSuccessful = res.getBoolean("IsSuccessful");
+                String message = "";
+                if (res.has("Message")) {
+                    message = res.getString("Message");
+                }
+                if (IsSuccessful) {
+                    resJson.put("code", 200);
+                    resJson.put("status", "success");
 
+                    resJson.put("message", message.length() > 0 ? message : "Verification code sent successfully.");
 
-            boolean IsSuccessful = res.getBoolean("IsSuccessful");
+                } else {
 
-            if (IsSuccessful) {
-                resJson.put("code", 200);
-                resJson.put("status", "success");
-                resJson.put("message", "Verification code sent successfully.");
+                    resJson.put("code", 401);
+                    resJson.put("status", "fail");
+                    resJson.put("message", message.length() > 0 ? message : "Unfortunately, there is a problem");
 
-            } else {
+                }
+
+            } catch (Exception e) {
+                resJson = new JSONObject();
                 resJson.put("code", 401);
                 resJson.put("status", "fail");
                 resJson.put("message", "Unfortunately, there is a problem");
-
             }
 
 
